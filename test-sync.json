@@ -1,0 +1,17 @@
+{
+  "source": "test-manuel",
+  "parts": [
+    {
+      "external_id": "TEST-IP15-PRO-MAX-SCREEN",
+      "supplier": "Test PowerShell",
+      "name": "Ecran iPhone 15 Pro Max Test",
+      "category": "ecran",
+      "brand": "Apple",
+      "device_model": "iPhone 15 Pro Max",
+      "supplier_price_cents": 15000,
+      "margin_rate": 1.65,
+      "stock_status": "in_stock",
+      "stock_quantity": 3
+    }
+  ]
+}
