@@ -130,7 +130,7 @@ export async function sendDiagnosticEmails({
         to: TEAM_EMAIL,
         subject: `${urgent ? '⚠ ' : ''}Nouvelle demande ${reference} — ${data.brand} ${data.model}`,
         html,
-        replyTo: data.email,
+        reply_to: data.email,
         tags: [
           { name: 'category', value: 'team_notification' },
           { name: 'reference', value: reference },
