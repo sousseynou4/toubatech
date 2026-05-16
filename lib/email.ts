@@ -82,7 +82,7 @@ export async function sendDiagnosticEmails({
       subject: `Votre demande de diagnostic est bien reçue · ${reference}`,
       html,
       text,
-      replyTo: TEAM_EMAIL || undefined,
+      reply_To: TEAM_EMAIL || undefined,
       tags: [
         { name: 'category', value: 'diagnostic_confirmation' },
         { name: 'reference', value: reference },
