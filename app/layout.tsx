@@ -2,30 +2,32 @@ import type { Metadata } from 'next';
 import { GeistSans } from 'geist/font/sans';
 import { GeistMono } from 'geist/font/mono';
 import './globals.css';
+import { SITE_URL } from '@/lib/site';
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://toubatech.com'),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: 'TOUBA TECH — Réparation & Reconditionné à Lorient, Morbihan',
     template: '%s · TOUBA TECH',
   },
   description:
-    "TOUBA TECH : réparation experte de smartphones, tablettes et électronique grand public à Lorient et dans tout le Morbihan. Boutique de reconditionné, pièces détachées, micro-soudure. Économie circulaire et label QualiRépar.",
+    'TOUBA TECH (Toubatech), atelier de réparation de smartphones et tablettes à Lorient : écran, batterie, micro-soudure. Diagnostic gratuit en ligne, garantie 12 mois.',
   keywords: [
+    'Toubatech',
     'réparation smartphone Lorient',
+    'réparation écran téléphone Lorient',
     'iPhone reconditionné Morbihan',
     'micro-soudure Lorient',
     'pièces détachées smartphone',
-    'économie circulaire',
-    'QualiRépar',
     'tablette reconditionnée',
   ],
+  applicationName: 'TOUBA TECH',
   authors: [{ name: 'TOUBA TECH' }],
   creator: 'TOUBA TECH',
   openGraph: {
     type: 'website',
     locale: 'fr_FR',
-    url: 'https://toubatech.com',
+    url: '/',
     siteName: 'TOUBA TECH',
     title: 'TOUBA TECH — Réparation & Reconditionné à Lorient',
     description:

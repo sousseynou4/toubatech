@@ -10,12 +10,12 @@ export const metadata: Metadata = {
   title: 'Boutique reconditionné — iPhone, Galaxy & iPad à Lorient',
   description:
     "Smartphones, tablettes et accessoires reconditionnés à Lorient. iPhone, Samsung Galaxy, iPad. Grade A, B ou C. Garantie 12 mois TOUBA TECH. Économie circulaire, livraison Morbihan & toute la France.",
-  alternates: { canonical: 'https://toubatech.com/boutique' },
+  alternates: { canonical: '/boutique' },
   openGraph: {
     title: 'Boutique reconditionné — TOUBA TECH',
     description:
       'Téléphones et tablettes reconditionnés garantis 12 mois. Reconditionnement local à Lorient.',
-    url: 'https://toubatech.com/boutique',
+    url: '/boutique',
   },
 };
 

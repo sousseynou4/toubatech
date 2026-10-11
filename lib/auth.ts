@@ -108,3 +108,13 @@ export function requireAdminEnv(): { password: string; secret: string } {
   }
   return { password, secret };
 }
+
+/**
+ * Guard for admin API routes: true only if the request carries a valid,
+ * unexpired session cookie signed with ADMIN_SESSION_SECRET.
+ */
+export async function requireAdmin(request: { cookies: { get(name: string): { value: string } | undefined } }): Promise<boolean> {
+  const secret = process.env.ADMIN_SESSION_SECRET;
+  if (!secret) return false;
+  return verifySessionToken(request.cookies.get(SESSION_COOKIE_NAME)?.value, secret);
+}

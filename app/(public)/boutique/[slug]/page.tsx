@@ -92,6 +92,7 @@ export async function generateMetadata({
     description:
       product.shortDescription ||
       `${name} reconditionné chez TOUBA TECH à Lorient. Garantie ${product.warrantyMonths} mois. Économie circulaire.`,
+    alternates: { canonical: `/boutique/${params.slug}` },
     openGraph: {
       title: `${name} reconditionné — TOUBA TECH`,
       description: product.shortDescription || undefined,

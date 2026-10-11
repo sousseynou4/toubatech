@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { Section, Eyebrow } from '@/components/ui/Section';
 import { Button } from '@/components/ui/Button';
+import { SITE_URL } from '@/lib/site';
 import { FAQAccordion } from './FAQAccordion';
 import { SERVICES, PRICING, PROCESS_STEPS, FAQ, type RepairService } from './data';
 
@@ -24,12 +25,12 @@ export const metadata: Metadata = {
   title: 'Réparation smartphone, tablette & ordinateur à Lorient — Morbihan',
   description:
     "Réparation experte de smartphones, tablettes et ordinateurs à Lorient et dans tout le Morbihan : écran cassé, batterie, micro-soudure, désoxydation, récupération de données. Diagnostic gratuit, garantie 12 mois, déplacement à domicile.",
-  alternates: { canonical: 'https://toubatech.com/reparation' },
+  alternates: { canonical: '/reparation' },
   openGraph: {
     title: 'Réparation experte à Lorient & Morbihan — TOUBA TECH',
     description:
       "Du remplacement d'écran à la micro-soudure : tous niveaux d'expertise sous un même toit, à Lorient. Garantie 12 mois. Devis gratuit.",
-    url: 'https://toubatech.com/reparation',
+    url: '/reparation',
   },
 };
 
@@ -605,13 +606,13 @@ function SchemaMarkup() {
                 '@type': 'ListItem',
                 position: 1,
                 name: 'Accueil',
-                item: 'https://toubatech.com/',
+                item: `${SITE_URL}/`,
               },
               {
                 '@type': 'ListItem',
                 position: 2,
                 name: 'Réparation',
-                item: 'https://toubatech.com/reparation',
+                item: `${SITE_URL}/reparation`,
               },
             ],
           }),

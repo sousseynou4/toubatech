@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: 'Diagnostic en ligne — Réparation à Lorient',
   description:
     "Décrivez votre panne en 5 étapes. Réception d'un pré-diagnostic et d'une estimation tarifaire sous 24h ouvrées par TOUBA TECH à Lorient.",
+  alternates: { canonical: '/diagnostic' },
 };
 
 export default function DiagnosticPage() {

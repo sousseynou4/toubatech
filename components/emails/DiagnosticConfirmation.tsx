@@ -381,10 +381,10 @@ export default function DiagnosticConfirmationEmail({
                   <strong style={{ color: BRAND.emerald }}>Une question ?</strong> Répondez
                   directement à cet email ou contactez-nous à{' '}
                   <Link
-                    href="mailto:contact@toubatech.com"
+                    href="mailto:contact@toubatech.eu"
                     style={{ color: BRAND.ink, textDecoration: 'underline' }}
                   >
-                    contact@toubatech.com
+                    contact@toubatech.eu
                   </Link>
                   .
                 </Text>

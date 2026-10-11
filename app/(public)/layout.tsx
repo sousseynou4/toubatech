@@ -1,5 +1,36 @@
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
+import { BUSINESS, SITE_URL } from '@/lib/site';
+
+// Données structurées : le nom du site (avec ses variantes) et la fiche « entreprise locale »
+// aident Google à relier la recherche « toubatech » à ce site et à la fiche Google.
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebSite',
+      '@id': `${SITE_URL}/#website`,
+      url: `${SITE_URL}/`,
+      name: BUSINESS.name,
+      alternateName: BUSINESS.alternateNames,
+      inLanguage: 'fr-FR',
+    },
+    {
+      '@type': 'LocalBusiness',
+      '@id': `${SITE_URL}/#business`,
+      name: BUSINESS.name,
+      alternateName: BUSINESS.alternateNames,
+      description: BUSINESS.description,
+      url: `${SITE_URL}/`,
+      telephone: BUSINESS.telephone,
+      email: BUSINESS.email,
+      address: { '@type': 'PostalAddress', ...BUSINESS.address },
+      areaServed: BUSINESS.areaServed,
+      priceRange: '€€',
+      sameAs: BUSINESS.sameAs,
+    },
+  ],
+};
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -16,28 +47,8 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       <main id="main">{children}</main>
       <Footer />
 
-      {/* JSON-LD: LocalBusiness */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'LocalBusiness',
-            name: 'TOUBA TECH',
-            description:
-              "Réparation et reconditionnement d'appareils électroniques à Lorient et dans le Morbihan.",
-            areaServed: ['Lorient', 'Morbihan', 'Bretagne'],
-            address: {
-              '@type': 'PostalAddress',
-              addressLocality: 'Lorient',
-              postalCode: '56100',
-              addressCountry: 'FR',
-            },
-            priceRange: '€€',
-            telephone: '+33-XXX-XXX-XXX',
-          }),
-        }}
-      />
+      {/* JSON-LD : site + entreprise locale */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
     </>
   );
 }

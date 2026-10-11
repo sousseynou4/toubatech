@@ -17,12 +17,12 @@ export const metadata: Metadata = {
   title: 'Engagement écologique — Loi AGEC, QualiRépar à Lorient',
   description:
     "TOUBA TECH s'engage pour une tech durable en Bretagne : conformité à la Loi AGEC, démarche de labellisation QualiRépar, impact CO₂ mesuré. Réparation et reconditionné à Lorient, Morbihan et toute la Bretagne.",
-  alternates: { canonical: 'https://toubatech.com/ecologie' },
+  alternates: { canonical: '/ecologie' },
   openGraph: {
     title: 'Engagement écologique — TOUBA TECH',
     description:
       "Loi AGEC, label QualiRépar, économie circulaire bretonne. Notre engagement pour le numérique responsable.",
-    url: 'https://toubatech.com/ecologie',
+    url: '/ecologie',
   },
 };
 

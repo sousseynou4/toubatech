@@ -11,12 +11,12 @@ export const metadata: Metadata = {
   title: 'Pièces détachées — Écrans, batteries, connecteurs',
   description:
     "Catalogue de pièces détachées smartphone et tablette : écrans, batteries, connecteurs de charge, cartes mères. Apple, Samsung, Google Pixel. Disponibles à Lorient ou en envoi France.",
-  alternates: { canonical: 'https://toubatech.com/pieces-detachees' },
+  alternates: { canonical: '/pieces-detachees' },
   openGraph: {
     title: 'Pièces détachées — TOUBA TECH',
     description:
       'Catalogue de pièces détachées pour smartphone et tablette. Qualité OEM, compatible premium, service pack.',
-    url: 'https://toubatech.com/pieces-detachees',
+    url: '/pieces-detachees',
   },
 };
 
