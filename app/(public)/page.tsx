@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ArrowUpRight, Wrench, Recycle, Cpu, MapPin, Clock, ShieldCheck } from 'lucide-react';
 import { Section, Eyebrow } from '@/components/ui/Section';
 import { Button } from '@/components/ui/Button';
+import { HeroDevice } from '@/components/home/HeroDevice';
 
 export const metadata: Metadata = {
   alternates: { canonical: '/' },
@@ -87,35 +88,18 @@ function Hero() {
 
 function HeroVisual() {
   return (
-    <div className="relative aspect-square w-full max-w-md mx-auto">
-      {/* Decorative outer ring */}
-      <div className="absolute inset-0 rounded-full border border-ink/10 animate-pulse-soft" />
-      <div className="absolute inset-8 rounded-full border border-emerald/15" />
-
-      {/* Centered card with phone glyph */}
-      <div className="absolute inset-12 flex items-center justify-center rounded-[2rem] border border-ink/10 bg-bone shadow-lift">
-        <svg viewBox="0 0 200 200" className="h-3/5 w-3/5" aria-hidden="true">
-          {/* Phone outline */}
-          <rect x="60" y="30" width="80" height="140" rx="14" fill="none" stroke="#003366" strokeWidth="2.5" />
-          <rect x="68" y="42" width="64" height="110" rx="4" fill="#F0F0F0" />
-          {/* Repair check */}
-          <circle cx="100" cy="97" r="22" fill="#339966" />
-          <path d="M89 97 L97 105 L112 89" stroke="#FAFAF7" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-          {/* Speaker dot */}
-          <circle cx="100" cy="36" r="1.5" fill="#003366" />
-          {/* Home indicator */}
-          <rect x="88" y="159" width="24" height="3" rx="1.5" fill="#003366" opacity="0.3" />
-        </svg>
-      </div>
+    <div className="relative mx-auto w-full max-w-[20rem]">
+      {/* Téléphone animé : écran cassé → circuits → coche TOUBA TECH (boucle vidéo, même univers que le spot) */}
+      <HeroDevice />
 
       {/* Floating annotations */}
       <Annotation
-        position="-top-2 right-4"
+        position="top-14 -right-2 sm:-right-10"
         icon={<Wrench className="h-3 w-3" />}
         label="Micro-soudure"
       />
       <Annotation
-        position="bottom-8 -left-4"
+        position="bottom-28 -left-2 sm:-left-10"
         icon={<Recycle className="h-3 w-3" />}
         label="Réemploi"
         emerald
