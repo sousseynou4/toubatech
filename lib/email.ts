@@ -12,7 +12,15 @@ function getResend() {
   return new Resend(apiKey);
 }
 
-const FROM = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+// Expéditeur : une adresse du domaine toubatech.eu (vérifié chez Resend).
+// L'adresse de test onboarding@resend.dev ne peut écrire qu'au propriétaire du compte Resend :
+// avec elle, ni le client ni l'équipe ne reçoivent rien. On l'ignore donc si elle traîne dans la config.
+const DEFAULT_FROM = 'contact@toubatech.eu';
+const configuredFrom = process.env.RESEND_FROM_EMAIL?.trim();
+if (configuredFrom?.endsWith('@resend.dev')) {
+  console.warn(`[email] RESEND_FROM_EMAIL=${configuredFrom} est une adresse de test Resend : envoi depuis ${DEFAULT_FROM}`);
+}
+const FROM = configuredFrom && !configuredFrom.endsWith('@resend.dev') ? configuredFrom : DEFAULT_FROM;
 const TEAM_EMAIL = process.env.RESEND_TEAM_NOTIFICATION_EMAIL;
 
 interface SendDiagnosticEmailsArgs {
