@@ -185,7 +185,7 @@ function ReassuranceStrip() {
     {
       icon: Truck,
       title: 'Livraison France',
-      description: 'Expédition sous 48h ou retrait à Lorient.',
+      description: "Envoi en France ou retrait à l'atelier de Lorient.",
     },
     {
       icon: Leaf,

@@ -63,10 +63,10 @@ export default function SuccessPage({
             <div className="rounded-xl border border-ink/8 bg-mist/20 p-4">
               <div className="flex items-center gap-2 text-xs font-medium text-ink">
                 <ShoppingBag className="h-3.5 w-3.5 text-emerald" />
-                Préparation 48h
+                Préparation de la commande
               </div>
               <p className="mt-1.5 text-xs text-ink-500">
-                Expédition sous 48h ouvrées ou retrait possible à Lorient.
+                Envoi en France ou retrait possible à l'atelier de Lorient.
               </p>
             </div>
           </div>

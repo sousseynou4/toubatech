@@ -249,7 +249,7 @@ export default async function ProductDetailPage({
             <div className="mt-6 grid gap-3 sm:grid-cols-3">
               <Reassurance icon={ShieldCheck} title={`${product.warrantyMonths} mois`} subtitle="Garantie totale" />
               <Reassurance icon={RefreshCw} title="14 jours" subtitle="Rétractation" />
-              <Reassurance icon={Truck} title="48h" subtitle="Expédition" />
+              <Reassurance icon={Truck} title="Livraison" subtitle="ou retrait à Lorient" />
             </div>
 
             {/* CO2 highlight */}
