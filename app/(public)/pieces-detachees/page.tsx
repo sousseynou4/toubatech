@@ -10,7 +10,7 @@ import type { StockStatus } from '@/components/pieces/StockBadge';
 export const metadata: Metadata = {
   title: 'Pièces détachées — Écrans, batteries, connecteurs',
   description:
-    "Catalogue de pièces détachées smartphone et tablette : écrans, batteries, connecteurs de charge, cartes mères. Apple, Samsung, Google Pixel. Disponibles à Lorient ou en envoi France.",
+    "Catalogue de pièces détachées smartphone et tablette : écrans, batteries, connecteurs de charge, cartes mères. Apple, Samsung, Google Pixel. Atelier TOUBA TECH à Lorient.",
   alternates: { canonical: '/pieces-detachees' },
   openGraph: {
     title: 'Pièces détachées — TOUBA TECH',
@@ -178,12 +178,11 @@ export default async function PiecesDetacheesPage({
         </nav>
 
         <div className="space-y-2">
-          <Eyebrow>Catalogue mis à jour en continu</Eyebrow>
+          <Eyebrow>Catalogue</Eyebrow>
           <h1 className="mt-3 text-hero text-ink">
             Pièces détachées pour smartphones et tablettes.
           </h1>
           <p className="mt-4 max-w-2xl text-[16px] leading-relaxed text-ink-500">
-            Notre catalogue est synchronisé automatiquement avec nos fournisseurs partenaires.
             Toutes les pièces sont sélectionnées pour leur qualité (OEM, Service Pack ou Compatible Premium)
             et compatibles avec la majorité des smartphones et tablettes Apple, Samsung et Google.
           </p>
@@ -225,7 +224,6 @@ export default async function PiecesDetacheesPage({
         )}
       </Section>
 
-      <ProSection />
       <CustomRequestCTA />
     </>
   );
@@ -241,7 +239,7 @@ function Hero() {
       <div className="relative mx-auto max-w-7xl px-5 py-22 md:px-8 md:py-30">
         <div className="grid items-end gap-12 lg:grid-cols-12">
           <div className="lg:col-span-8">
-            <Eyebrow>Catalogue temps réel · Lorient</Eyebrow>
+            <Eyebrow>Catalogue · Lorient</Eyebrow>
             <h1 className="mt-6 text-display text-ink">
               Pièces détachées
               <br />
@@ -250,24 +248,24 @@ function Hero() {
             <p className="mt-7 max-w-2xl text-[17px] leading-relaxed text-ink-500">
               Écrans, batteries, connecteurs de charge, cartes mères : notre catalogue couvre
               les références les plus demandées des smartphones et tablettes Apple, Samsung et
-              Google. Tarifs nets, stock en temps réel, expédition rapide depuis le Morbihan.
+              Google. Prix nets, et l'atelier vous aide à choisir la bonne référence.
             </p>
           </div>
 
           <div className="lg:col-span-4 lg:pl-12">
             <div className="rounded-2xl border border-emerald/20 bg-bone/80 p-5 shadow-soft backdrop-blur-sm">
               <p className="font-mono text-[10px] tracking-[0.22em] text-emerald uppercase">
-                Tarif pro
+                Professionnels
               </p>
               <p className="mt-3 text-[15px] leading-relaxed text-ink">
-                Vous êtes <strong>réparateur, atelier ou revendeur</strong> ? Bénéficiez d'une
-                remise dégressive sur commande en gros.
+                Vous êtes <strong>réparateur, atelier ou revendeur</strong> ? Demandez-nous un
+                devis pour vos commandes en quantité.
               </p>
               <Link
-                href="mailto:contact@toubatech.eu?subject=Demande%20de%20tarif%20pro"
+                href="mailto:contact@toubatech.eu?subject=Demande%20de%20devis%20pro"
                 className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-emerald hover:underline"
               >
-                Demander un compte pro
+                Demander un devis
                 <ArrowUpRight className="h-3.5 w-3.5" />
               </Link>
             </div>
@@ -288,13 +286,13 @@ function ReassuranceStrip() {
     },
     {
       icon: Truck,
-      title: 'Expédition rapide',
-      description: 'Sous 24h pour les pièces en stock à Lorient.',
+      title: 'Sur commande',
+      description: 'Une référence absente du catalogue ? Nous la cherchons pour vous.',
     },
     {
       icon: Wrench,
-      title: 'Retrait atelier',
-      description: 'Disponibles au comptoir à Lorient sans rendez-vous.',
+      title: "Conseil d'atelier",
+      description: "Un doute sur la référence ? L'atelier de Lorient vous aide à choisir.",
     },
     {
       icon: SearchIcon,
@@ -347,66 +345,6 @@ function EmptyState({ hasSearch }: { hasSearch: boolean }) {
         , nous pouvons la sourcer.
       </p>
     </div>
-  );
-}
-
-/* ─────────────────────────────────  PRO SECTION  ───────────────────────────────── */
-function ProSection() {
-  return (
-    <Section className="border-t border-ink/8 bg-ink text-bone">
-      <div className="grid items-center gap-10 lg:grid-cols-12">
-        <div className="lg:col-span-7">
-          <span className="inline-flex items-center gap-2 font-mono text-[11px] tracking-[0.22em] text-emerald uppercase">
-            <span className="h-px w-6 bg-emerald" aria-hidden="true" />
-            Vous êtes professionnel ?
-          </span>
-          <h2 className="mt-6 text-hero text-bone">
-            Une offre dédiée
-            <br />
-            <span className="text-emerald">pour les ateliers de réparation.</span>
-          </h2>
-          <p className="mt-5 max-w-xl text-[16px] leading-relaxed text-bone/70">
-            Compte pro avec remise dégressive, devis groupés, facturation pro, livraison en
-            tournée dans le Morbihan, garanties techniques étendues. Notre catalogue est
-            synchronisé automatiquement avec nos partenaires B2B pour garantir des prix
-            compétitifs et un stock toujours à jour.
-          </p>
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Link
-              href="mailto:contact@toubatech.eu?subject=Demande%20d'ouverture%20de%20compte%20pro"
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-emerald px-6 text-[15px] font-medium text-bone transition-all hover:bg-emerald-500"
-            >
-              Ouvrir un compte pro
-              <ArrowUpRight className="h-4 w-4" />
-            </Link>
-            <Link
-              href="/contact"
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-bone/20 bg-transparent px-6 text-[15px] font-medium text-bone transition-all hover:bg-bone/5"
-            >
-              Nous rencontrer
-            </Link>
-          </div>
-        </div>
-
-        <div className="lg:col-span-5">
-          <ul className="space-y-3">
-            <ProBenefit value="-15 à -30%" label="Remise pro selon volume" />
-            <ProBenefit value="48h" label="Livraison Bretagne sous 48h" />
-            <ProBenefit value="6 mois" label="Garantie technique pièces" />
-            <ProBenefit value="0 €" label="Frais de port à partir de 200 €" />
-          </ul>
-        </div>
-      </div>
-    </Section>
-  );
-}
-
-function ProBenefit({ value, label }: { value: string; label: string }) {
-  return (
-    <li className="flex items-baseline justify-between gap-4 border-b border-bone/10 pb-3">
-      <span className="text-sm text-bone/70">{label}</span>
-      <span className="font-mono text-xl font-medium tracking-tight text-emerald">{value}</span>
-    </li>
   );
 }
 
