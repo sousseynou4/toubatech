@@ -227,11 +227,12 @@ export default function PanierPage() {
               </dl>
 
               <div className="mt-6 flex items-end justify-between">
-                <span className="text-sm font-medium text-ink">Total TTC</span>
+                <span className="text-sm font-medium text-ink">Total</span>
                 <span className="font-mono text-2xl font-medium tracking-tight text-ink">
                   {formatPrice(totalCents)}
                 </span>
               </div>
+              <p className="mt-1 text-right text-xs text-ink-400">TVA non applicable, art. 293 B du CGI</p>
 
               {/* Email field */}
               <div className="mt-6 space-y-3">

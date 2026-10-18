@@ -329,7 +329,7 @@ function Pricing() {
           </p>
         </div>
         <p className="font-mono text-[10px] tracking-[0.18em] text-ink-400 uppercase md:text-right">
-          Prix TTC · À partir de
+          Prix nets · À partir de
         </p>
       </div>
 

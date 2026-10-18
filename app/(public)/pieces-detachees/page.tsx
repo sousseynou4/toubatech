@@ -366,7 +366,7 @@ function ProSection() {
             <span className="text-emerald">pour les ateliers de réparation.</span>
           </h2>
           <p className="mt-5 max-w-xl text-[16px] leading-relaxed text-bone/70">
-            Compte pro avec remise dégressive, devis groupés, facturation HT, livraison en
+            Compte pro avec remise dégressive, devis groupés, facturation pro, livraison en
             tournée dans le Morbihan, garanties techniques étendues. Notre catalogue est
             synchronisé automatiquement avec nos partenaires B2B pour garantir des prix
             compétitifs et un stock toujours à jour.
@@ -393,7 +393,7 @@ function ProSection() {
             <ProBenefit value="-15 à -30%" label="Remise pro selon volume" />
             <ProBenefit value="48h" label="Livraison Bretagne sous 48h" />
             <ProBenefit value="6 mois" label="Garantie technique pièces" />
-            <ProBenefit value="0 €" label="Frais de port à partir de 200 € HT" />
+            <ProBenefit value="0 €" label="Frais de port à partir de 200 €" />
           </ul>
         </div>
       </div>
