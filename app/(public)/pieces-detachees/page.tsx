@@ -264,7 +264,7 @@ function Hero() {
                 remise dégressive sur commande en gros.
               </p>
               <Link
-                href="mailto:[email protected]?subject=Demande%20de%20tarif%20pro"
+                href="mailto:contact@toubatech.eu?subject=Demande%20de%20tarif%20pro"
                 className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-emerald hover:underline"
               >
                 Demander un compte pro
@@ -339,7 +339,7 @@ function EmptyState({ hasSearch }: { hasSearch: boolean }) {
       <p className="mt-2 text-sm text-ink-400">
         Vous cherchez une référence précise ?{' '}
         <Link
-          href="mailto:[email protected]?subject=Recherche%20pièce%20détachée"
+          href="mailto:contact@toubatech.eu?subject=Recherche%20pièce%20détachée"
           className="font-medium text-emerald hover:underline"
         >
           Contactez-nous
@@ -373,7 +373,7 @@ function ProSection() {
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link
-              href="mailto:[email protected]?subject=Demande%20d'ouverture%20de%20compte%20pro"
+              href="mailto:contact@toubatech.eu?subject=Demande%20d'ouverture%20de%20compte%20pro"
               className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-emerald px-6 text-[15px] font-medium text-bone transition-all hover:bg-emerald-500"
             >
               Ouvrir un compte pro
@@ -428,7 +428,7 @@ function CustomRequestCTA() {
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link
-              href="mailto:[email protected]?subject=Recherche%20pièce%20spécifique"
+              href="mailto:contact@toubatech.eu?subject=Recherche%20pièce%20spécifique"
               className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-ink px-6 text-[15px] font-medium text-bone shadow-soft transition-all hover:bg-ink-700"
             >
               Faire une demande
