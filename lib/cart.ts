@@ -112,12 +112,5 @@ export function useCart() {
   };
 }
 
-/** Format cents as French euros (e.g. 47900 → "479 €") */
-export function formatPrice(cents: number): string {
-  return new Intl.NumberFormat('fr-FR', {
-    style: 'currency',
-    currency: 'EUR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(cents / 100);
-}
+// Re-exporté pour les composants navigateur ; les composants serveur importent depuis '@/lib/format'.
+export { formatPrice } from './format';

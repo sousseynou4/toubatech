@@ -8,7 +8,7 @@ import { AddToCartButton } from '@/components/boutique/AddToCartButton';
 import { ProductCard, type Product } from '@/components/boutique/ProductCard';
 import { Section } from '@/components/ui/Section';
 import { getServerSupabase } from '@/lib/supabase';
-import { formatPrice } from '@/lib/cart';
+import { formatPrice } from '@/lib/format';
 
 interface ProductDetail extends Product {
   description: string | null;
