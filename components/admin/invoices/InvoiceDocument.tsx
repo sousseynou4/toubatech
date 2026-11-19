@@ -1,4 +1,4 @@
-import { OPERATION_LABELS, formatDateFr, formatEuros, lineTotal, type InvoiceRow } from '@/lib/invoice';
+import { OPERATION_LABELS, formatDateFr, formatEuros, lineTotal, type InvoicePayment, type InvoiceRow } from '@/lib/invoice';
 
 /**
  * La facture telle qu'elle est imprimée / enregistrée en PDF.
@@ -7,14 +7,19 @@ import { OPERATION_LABELS, formatDateFr, formatEuros, lineTotal, type InvoiceRow
 export function InvoiceDocument({
   invoice: inv,
   original,
+  payments,
 }: {
   invoice: InvoiceRow;
   /** Facture annulée, quand le document est un avoir. */
   original?: { number: string; issue_date: string } | null;
+  /** Règlements reçus (ou remboursements, pour un avoir), triés par date. */
+  payments: InvoicePayment[];
 }) {
   const s = inv.seller;
   const isCredit = inv.kind === 'credit_note';
   const isPro = inv.customer_type === 'business';
+  const paid = payments.reduce((sum, p) => sum + p.amount_cents, 0);
+  const remaining = Math.max(0, Math.abs(inv.total_cents) - paid);
 
   return (
     <article className="mx-auto max-w-[210mm] bg-white p-8 text-[13px] leading-relaxed text-graphite shadow-soft md:p-12 print:max-w-none print:p-0 print:shadow-none">
@@ -100,24 +105,37 @@ export function InvoiceDocument({
             <span>{isCredit ? 'Montant de l’avoir' : 'Net à payer'}</span>
             <span className="font-mono">{formatEuros(inv.total_cents)}</span>
           </div>
+          {!isCredit && paid > 0 && remaining > 0 && (
+            <>
+              <Row label="Déjà réglé" value={`− ${formatEuros(paid)}`} mono />
+              <div className="flex justify-between rounded bg-ink/5 px-2 py-1 text-[15px] font-semibold text-ink">
+                <span>Reste à payer</span>
+                <span className="font-mono">{formatEuros(remaining)}</span>
+              </div>
+            </>
+          )}
           <p className="pt-1 text-right text-[11px] italic">{inv.vat_mention}</p>
         </div>
       </section>
 
       {/* Paiement */}
       <section className="mt-8 space-y-1 border-t border-ink/15 pt-5 text-[12px]">
-        {inv.paid_at ? (
-          <p className="font-medium text-emerald-600">
-            {isCredit ? 'Remboursé' : 'Facture acquittée'} le {formatDateFr(inv.paid_at)} — {inv.payment_method}.
+        {payments.map((p, i) => (
+          <p key={i}>
+            {isCredit ? 'Remboursement' : 'Règlement reçu'} le {formatDateFr(p.paid_at)}
+            {p.method && ` (${p.method})`} : <span className="font-mono">{formatEuros(p.amount_cents)}</span>
           </p>
-        ) : (
-          !isCredit && (
-            <p>
-              Conditions de paiement :{' '}
-              {inv.due_date <= inv.issue_date ? 'paiement à réception de la facture' : `à régler au plus tard le ${formatDateFr(inv.due_date)}`}.
-              
-            </p>
-          )
+        ))}
+        {!isCredit && remaining === 0 && (
+          <p className="font-medium text-emerald-600">
+            Facture acquittée{inv.paid_at && ` le ${formatDateFr(inv.paid_at)}`}.
+          </p>
+        )}
+        {!isCredit && remaining > 0 && (
+          <p className="font-medium">
+            {paid > 0 ? `Reste à payer : ${formatEuros(remaining)}, ` : 'Conditions de paiement : '}
+            {inv.due_date <= inv.issue_date ? 'à réception de la facture' : `au plus tard le ${formatDateFr(inv.due_date)}`}.
+          </p>
         )}
         {!isCredit && isPro && (
           <p className="text-ink-500">

@@ -2,7 +2,15 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { getServerSupabase } from '@/lib/supabase';
 import { requireAdmin } from '@/lib/auth';
 import { BUSINESS, FULL_ADDRESS, LEGAL, SITE_URL } from '@/lib/site';
-import { invoiceInputSchema, invoiceTotal, type InvoiceRow, OPERATION_LABELS } from '@/lib/invoice';
+import {
+  invoiceInputSchema,
+  invoiceTotal,
+  paymentsOf,
+  remainingCents,
+  OPERATION_LABELS,
+  type InvoicePayment,
+  type InvoiceRow,
+} from '@/lib/invoice';
 
 export const runtime = 'nodejs';
 
@@ -73,9 +81,7 @@ export async function POST(request: NextRequest) {
     }
     const d = parsed.data;
     record = {
-      ...d,
-      paid_at: d.paid_at && d.payment_method ? d.paid_at : null,
-      payment_method: d.paid_at && d.payment_method ? d.payment_method : null,
+      ...d, // initial_payment éventuel : enregistré par la base dans la même transaction
       kind: 'invoice',
       // Totaux toujours recalculés côté serveur.
       total_cents: invoiceTotal(d.lines),
@@ -110,7 +116,7 @@ export async function GET(request: NextRequest) {
 
   const { data, error } = await getServerSupabase()
     .from('invoices')
-    .select('number, kind, issue_date, service_date, customer_name, customer_company, operation_type, total_cents, paid_at, payment_method')
+    .select('number, kind, issue_date, service_date, due_date, customer_name, customer_company, operation_type, total_cents, paid_at, payment_method, invoice_payments(paid_at, amount_cents, method)')
     .order('created_at', { ascending: true });
 
   if (error) {
@@ -122,20 +128,25 @@ export async function GET(request: NextRequest) {
   const cell = (v: string | null) => `"${(v ?? '').replace(/^[=+\-@\t\r]/, "'$&").replace(/"/g, '""')}"`;
   const amount = (cents: number) => (cents / 100).toFixed(2).replace('.', ',');
 
-  const header = ['N°', 'Type', 'Date émission', 'Date prestation', 'Client', 'Nature', 'Montant (€)', 'Date encaissement', 'Mode de règlement'];
-  const rows = (data ?? []).map((r) =>
-    [
+  const header = ['N°', 'Type', 'Date émission', 'Date prestation', 'Échéance', 'Client', 'Nature', 'Montant (€)', 'Réglé (€)', 'Reste dû (€)', 'Règlements (date, mode, montant)'];
+  const rows = ((data ?? []) as unknown as (InvoiceRow & { invoice_payments: InvoicePayment[] })[]).map((r) => {
+    const payments = paymentsOf(r);
+    const remaining = remainingCents(r);
+    return [
       cell(r.number),
       cell(r.kind === 'credit_note' ? 'Avoir' : 'Facture'),
       cell(r.issue_date),
       cell(r.service_date),
+      cell(r.due_date),
       cell(r.customer_company ? `${r.customer_company} (${r.customer_name})` : r.customer_name),
-      cell(OPERATION_LABELS[r.operation_type as keyof typeof OPERATION_LABELS] ?? r.operation_type),
+      cell(OPERATION_LABELS[r.operation_type] ?? r.operation_type),
       amount(r.total_cents),
-      cell(r.paid_at),
-      cell(r.payment_method),
-    ].join(';')
-  );
+      amount(Math.abs(r.total_cents) - remaining),
+      // Avoir : reste à rembourser, pas une dette du client.
+      r.kind === 'credit_note' ? '' : amount(remaining),
+      cell(payments.map((p) => `${p.paid_at} ${p.method} ${amount(p.amount_cents)}`).join(' | ')),
+    ].join(';');
+  });
 
   // BOM + « ; » : s'ouvre directement dans Excel en français.
   const csv = '﻿' + [header.map(cell).join(';'), ...rows].join('\r\n');

@@ -33,10 +33,17 @@ export const invoiceInputSchema = z
     lines: z.array(invoiceLineSchema).min(1, 'Au moins une ligne').max(50),
     warranty: optionalText(500),
     notes: optionalText(1000),
-    paid_at: z.string().date().optional().nullable(),
-    payment_method: optionalText(40),
+    // Paiement complet ou acompte reçu au moment de l'émission.
+    initial_payment: z
+      .object({ amount_cents: z.number().int().positive(), method: z.string().trim().min(1).max(40) })
+      .optional()
+      .nullable(),
   })
   .refine((d) => invoiceTotal(d.lines) > 0, { message: 'Le total doit être positif', path: ['lines'] })
+  .refine((d) => !d.initial_payment || d.initial_payment.amount_cents <= invoiceTotal(d.lines), {
+    message: "L'acompte dépasse le total de la facture",
+    path: ['initial_payment'],
+  })
   .refine((d) => d.customer_type === 'individual' || !!d.customer_company, {
     message: 'Raison sociale requise pour un client professionnel',
     path: ['customer_company'],
@@ -46,7 +53,8 @@ export type InvoiceInput = z.infer<typeof invoiceInputSchema>;
 export type InvoiceLine = z.infer<typeof invoiceLineSchema>;
 
 export const paymentSchema = z.object({
-  paid_at: z.string().date(),
+  paid_at: z.string().date().refine((d) => d <= todayParis(), 'La date de règlement ne peut pas être dans le futur'),
+  amount_cents: z.number().int().positive(),
   payment_method: z.string().trim().min(1).max(40),
 });
 
@@ -91,13 +99,22 @@ export const PAYMENT_METHODS = ['Carte bancaire', 'Espèces', 'Virement', 'Chèq
 export const DEFAULT_WARRANTY =
   "Garantie commerciale TOUBA TECH de 12 mois, pièces et main-d'œuvre, à compter de la restitution (voir CGV), en plus des garanties légales.";
 
-export interface InvoiceRow extends InvoiceInput {
+export interface InvoicePayment {
+  paid_at: string;
+  amount_cents: number;
+  method: string;
+}
+
+export interface InvoiceRow extends Omit<InvoiceInput, 'initial_payment'> {
   id: string;
   number: string;
   kind: 'invoice' | 'credit_note';
   credit_note_for: string | null;
   issue_date: string;
   total_cents: number;
+  /** Renseignés automatiquement quand la facture est entièrement réglée. */
+  paid_at: string | null;
+  payment_method: string | null;
   vat_mention: string;
   seller: {
     tradeName: string;
@@ -112,24 +129,40 @@ export interface InvoiceRow extends InvoiceInput {
   created_at: string;
 }
 
-export type InvoiceState = 'paid' | 'due' | 'overdue' | 'cancelled' | 'refunded' | 'credit_open';
+type PaymentSource = Pick<InvoiceRow, 'paid_at' | 'payment_method' | 'total_cents'> & { invoice_payments?: InvoicePayment[] | null };
+
+/** Règlements d'une facture. Une facture marquée payée sans détail compte comme réglée en une fois. */
+export function paymentsOf(inv: PaymentSource): InvoicePayment[] {
+  if (inv.invoice_payments?.length) return [...inv.invoice_payments].sort((a, b) => a.paid_at.localeCompare(b.paid_at));
+  return inv.paid_at ? [{ paid_at: inv.paid_at, amount_cents: Math.abs(inv.total_cents), method: inv.payment_method ?? '' }] : [];
+}
+
+/** Ce que le client doit encore (ou ce qu'il reste à rembourser sur un avoir), en centimes. */
+export function remainingCents(inv: PaymentSource): number {
+  const paid = paymentsOf(inv).reduce((sum, p) => sum + p.amount_cents, 0);
+  return Math.max(0, Math.abs(inv.total_cents) - paid);
+}
+
+export type InvoiceState = 'paid' | 'partial' | 'due' | 'overdue' | 'cancelled' | 'credit';
 
 export function invoiceState(
-  inv: Pick<InvoiceRow, 'kind' | 'paid_at' | 'due_date'>,
+  inv: PaymentSource & Pick<InvoiceRow, 'kind' | 'due_date'>,
   hasCreditNote: boolean,
   today = todayParis()
 ): InvoiceState {
-  if (inv.kind === 'credit_note') return inv.paid_at ? 'refunded' : 'credit_open';
+  if (inv.kind === 'credit_note') return 'credit';
   if (hasCreditNote) return 'cancelled';
-  if (inv.paid_at) return 'paid';
-  return inv.due_date < today ? 'overdue' : 'due';
+  const remaining = remainingCents(inv);
+  if (remaining === 0) return 'paid';
+  if (inv.due_date < today) return 'overdue';
+  return remaining < inv.total_cents ? 'partial' : 'due';
 }
 
 export const STATE_LABELS: Record<InvoiceState, { label: string; cls: string }> = {
   paid: { label: 'Payée', cls: 'bg-emerald/10 text-emerald-600' },
+  partial: { label: 'Acompte reçu', cls: 'bg-amber-50 text-amber-700' },
   due: { label: 'À encaisser', cls: 'bg-amber-50 text-amber-700' },
   overdue: { label: 'En retard', cls: 'bg-red-50 text-red-700' },
   cancelled: { label: 'Annulée (avoir)', cls: 'bg-ink/8 text-ink-500' },
-  refunded: { label: 'Avoir remboursé', cls: 'bg-ink/8 text-ink-500' },
-  credit_open: { label: 'Avoir à rembourser', cls: 'bg-blue-50 text-blue-700' },
+  credit: { label: 'Avoir', cls: 'bg-blue-50 text-blue-700' },
 };

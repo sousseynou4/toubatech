@@ -48,7 +48,8 @@ export function InvoiceForm({ prefill, today }: { prefill: InvoicePrefill; today
     notes: '',
     payment_method: PAYMENT_METHODS[0],
   });
-  const [paidNow, setPaidNow] = useState(true);
+  const [payMode, setPayMode] = useState<'full' | 'deposit' | 'none'>('full');
+  const [deposit, setDeposit] = useState('');
   const [lines, setLines] = useState<LineDraft[]>(
     prefill.lines?.length
       ? prefill.lines.map((l) => ({ description: l.description, quantity: '1', price: l.price }))
@@ -75,7 +76,16 @@ export function InvoiceForm({ prefill, today }: { prefill: InvoicePrefill; today
     e.preventDefault();
     setError(null);
     if (!linesValid) return setError('Vérifiez les quantités et les prix des lignes.');
-    if (!window.confirm(`Émettre la facture de ${formatEuros(total)} ?\nUne fois émise, elle ne pourra plus être modifiée (seulement annulée par un avoir).`)) return;
+    const depositCents = eurosToCents(deposit);
+    if (payMode === 'deposit' && !(depositCents > 0 && depositCents < total)) {
+      return setError(`L'acompte doit être compris entre 0 et ${formatEuros(total)}.`);
+    }
+    const paidCents = payMode === 'full' ? total : payMode === 'deposit' ? depositCents : 0;
+    const due = total - paidCents;
+    if (!window.confirm(
+      `Émettre la facture de ${formatEuros(total)}${due > 0 ? ` (reste dû par le client : ${formatEuros(due)})` : ' (payée)'} ?\n` +
+      'Une fois émise, elle ne pourra plus être modifiée (seulement annulée par un avoir).'
+    )) return;
 
     setSaving(true);
     const payload = {
@@ -86,8 +96,7 @@ export function InvoiceForm({ prefill, today }: { prefill: InvoicePrefill; today
       customer_vat: isPro ? f.customer_vat : '',
       diagnostic_reference: prefill.diagnostic_reference ?? null,
       lines: parsedLines,
-      paid_at: paidNow ? today : null,
-      payment_method: paidNow ? f.payment_method : null,
+      initial_payment: paidCents > 0 ? { amount_cents: paidCents, method: f.payment_method } : null,
     };
     try {
       const res = await fetch('/api/admin/invoices', {
@@ -230,23 +239,43 @@ export function InvoiceForm({ prefill, today }: { prefill: InvoicePrefill; today
       </Section>
 
       <Section title="Paiement">
-        <label className="flex items-center gap-2 text-sm text-ink">
-          <input type="checkbox" checked={paidNow} onChange={(e) => setPaidNow(e.target.checked)} className="h-4 w-4 accent-[#339966]" />
-          Le client a déjà payé (facture acquittée aujourd'hui)
-        </label>
+        <fieldset className="space-y-2">
+          <legend className="sr-only">Le client a-t-il payé ?</legend>
+          {([
+            ['full', "Le client a tout payé aujourd'hui"],
+            ['deposit', "Le client a versé un acompte, il doit encore le reste"],
+            ['none', "Le client n'a rien payé pour l'instant"],
+          ] as const).map(([value, label]) => (
+            <label key={value} className="flex items-center gap-2 text-sm text-ink">
+              <input type="radio" name="payMode" checked={payMode === value} onChange={() => setPayMode(value)} className="h-4 w-4 accent-[#339966]" />
+              {label}
+            </label>
+          ))}
+        </fieldset>
         <div className="grid gap-4 sm:grid-cols-2">
-          {paidNow ? (
+          {payMode === 'deposit' && (
+            <Field label="Montant de l'acompte (€)" required>
+              <input className={inputCls} value={deposit} onChange={(e) => setDeposit(e.target.value)} inputMode="decimal" required placeholder="50,00" />
+            </Field>
+          )}
+          {payMode !== 'none' && (
             <Field label="Mode de règlement" required>
               <select className={inputCls} value={f.payment_method} onChange={set('payment_method')}>
                 {PAYMENT_METHODS.map((m) => <option key={m}>{m}</option>)}
               </select>
             </Field>
-          ) : (
-            <Field label="Date d'échéance" required hint="aujourd'hui = paiement à réception">
+          )}
+          {payMode !== 'full' && (
+            <Field label="Le client doit payer le reste avant le" required hint="aujourd'hui = à réception">
               <input type="date" className={inputCls} value={f.due_date} min={today} onChange={set('due_date')} required />
             </Field>
           )}
         </div>
+        {payMode === 'deposit' && Number.isFinite(total) && eurosToCents(deposit) > 0 && (
+          <p className="text-sm text-ink">
+            Reste dû par le client : <strong className="font-mono">{formatEuros(total - eurosToCents(deposit))}</strong>
+          </p>
+        )}
       </Section>
 
       {error && (

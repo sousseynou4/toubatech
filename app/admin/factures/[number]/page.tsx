@@ -5,25 +5,44 @@ import { AdminHeader } from '@/components/admin/AdminHeader';
 import { InvoiceDocument } from '@/components/admin/invoices/InvoiceDocument';
 import { InvoiceActions } from '@/components/admin/invoices/InvoiceActions';
 import { getServerSupabase } from '@/lib/supabase';
-import { STATE_LABELS, invoiceState, todayParis, type InvoiceRow } from '@/lib/invoice';
+import { STATE_LABELS, invoiceState, paymentsOf, remainingCents, todayParis, type InvoicePayment, type InvoiceRow } from '@/lib/invoice';
 
 export async function generateMetadata({ params }: { params: { number: string } }) {
   return { title: `${params.number} — TOUBA TECH` };
 }
 
+type WithPayments = InvoiceRow & { invoice_payments: InvoicePayment[] };
+const PAYMENTS = 'invoice_payments(paid_at, amount_cents, method)';
+
 export default async function InvoicePage({ params }: { params: { number: string } }) {
   const supabase = getServerSupabase();
-  const { data: invoice } = await supabase.from('invoices').select('*').eq('number', params.number).single<InvoiceRow>();
+  const { data: invoice } = await supabase
+    .from('invoices')
+    .select(`*, ${PAYMENTS}`)
+    .eq('number', params.number)
+    .single<WithPayments>();
   if (!invoice) notFound();
 
   // Avoir → facture qu'il annule ; facture → avoir qui l'annule, s'il existe.
-  const { data: related } = invoice.credit_note_for
-    ? await supabase.from('invoices').select('number, issue_date').eq('id', invoice.credit_note_for).maybeSingle()
-    : await supabase.from('invoices').select('number, issue_date').eq('credit_note_for', invoice.id).maybeSingle();
+  const relatedQuery = supabase.from('invoices').select(`number, issue_date, total_cents, paid_at, payment_method, ${PAYMENTS}`);
+  const { data: related } = await (invoice.credit_note_for
+    ? relatedQuery.eq('id', invoice.credit_note_for)
+    : relatedQuery.eq('credit_note_for', invoice.id)
+  ).maybeSingle<Pick<WithPayments, 'number' | 'issue_date' | 'total_cents' | 'paid_at' | 'payment_method' | 'invoice_payments'>>();
 
   const isCredit = invoice.kind === 'credit_note';
   const today = todayParis();
   const state = STATE_LABELS[invoiceState(invoice, !isCredit && !!related, today)];
+  const payments = paymentsOf(invoice);
+
+  // Facture : ce que le client doit encore (rien si elle est annulée).
+  // Avoir : on ne rembourse que ce que le client avait réellement payé sur la facture annulée.
+  const settled = (inv: Parameters<typeof remainingCents>[0]) => Math.abs(inv.total_cents) - remainingCents(inv);
+  const remaining = isCredit
+    ? Math.max(0, (related ? settled(related) : 0) - settled(invoice))
+    : related
+      ? 0
+      : remainingCents(invoice);
 
   return (
     <>
@@ -51,13 +70,13 @@ export default async function InvoicePage({ params }: { params: { number: string
             id={invoice.id}
             number={invoice.number}
             isCreditNote={isCredit}
-            isPaid={!!invoice.paid_at}
+            remaining={remaining}
             canCreditNote={!isCredit && !related}
             today={today}
           />
         </div>
 
-        <InvoiceDocument invoice={invoice} original={isCredit ? related : null} />
+        <InvoiceDocument invoice={invoice} original={isCredit ? related : null} payments={payments} />
       </div>
     </>
   );
