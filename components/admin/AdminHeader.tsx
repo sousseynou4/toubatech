@@ -18,7 +18,7 @@ export function AdminHeader() {
                 fill="none"
               />
             </svg>
-            <span className="text-[15px] font-medium tracking-tight text-ink">
+            <span className="hidden text-[15px] font-medium tracking-tight text-ink sm:inline">
               TOUBA <span className="text-emerald">TECH</span>
             </span>
           </Link>
@@ -29,6 +29,10 @@ export function AdminHeader() {
         </div>
 
         <div className="flex items-center gap-3">
+          <nav className="flex items-center gap-4 text-sm text-ink-500" aria-label="Console admin">
+            <Link href="/admin" className="transition-colors hover:text-ink">Demandes</Link>
+            <Link href="/admin/factures" className="transition-colors hover:text-ink">Factures</Link>
+          </nav>
           <Link
             href="/"
             target="_blank"

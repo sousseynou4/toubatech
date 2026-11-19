@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowLeft, Mail, Phone, Calendar, Sparkles, MapPin } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, Calendar, Sparkles, MapPin, FileText } from 'lucide-react';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { StatusSelect } from '@/components/admin/StatusSelect';
 import { NotesEditor } from '@/components/admin/NotesEditor';
@@ -262,6 +262,13 @@ export default async function DiagnosticDetailPage({
 
             <Card title="Actions rapides" compact>
               <div className="flex flex-col gap-2">
+                <Link
+                  href={`/admin/factures/nouvelle?diagnostic=${encodeURIComponent(diagnostic.reference)}`}
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-ink px-3 py-2 text-xs text-bone transition-colors hover:bg-ink-700"
+                >
+                  <FileText className="h-3 w-3" />
+                  Créer la facture
+                </Link>
                 <a
                   href={`mailto:${diagnostic.email}?subject=Votre%20diagnostic%20${diagnostic.reference}`}
                   className="inline-flex items-center justify-center gap-2 rounded-lg border border-ink/10 px-3 py-2 text-xs text-ink-600 transition-colors hover:border-ink/25 hover:text-ink"
