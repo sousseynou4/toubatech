@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { OrderBadge, PageHeader, Panel } from '@/components/admin/ui';
 import { PaymentForm, WhatsAppTemplates } from '@/components/admin/appointment-actions';
 import { OrderStatusActions } from '@/components/admin/commerce/order-actions';
+import { OrderNotesForm } from '@/components/admin/commerce/order-notes';
 import { formatDateTime, formatXOF } from '@/lib/format';
 import { formatPhone } from '@/lib/phone';
 import { templates } from '@/lib/notifications/messages';
@@ -86,6 +87,7 @@ export default async function OrderDetail({ params }: PageProps<'/admin/commande
           {ctx.can('payments.manage') && !['cancelled', 'refunded'].includes(status) && (
             <Panel title="Encaisser"><PaymentForm orderId={o.id} remaining={o.total_amount - o.paid_amount} depositDue={0} cashOpen={Boolean(cashId)} /></Panel>
           )}
+          {ctx.can('orders.manage') && o.channel === 'online' && <Panel title="Notes internes"><OrderNotesForm id={o.id} notes={o.internal_notes ?? ''} /></Panel>}
           {isPhone && o.channel === 'online' && <Panel title="Messages WhatsApp"><WhatsAppTemplates phone={o.customer_phone} messages={messages} orderId={o.id} customerId={o.customer_id ?? undefined} apiConfigured={isWhatsAppConfigured()} /></Panel>}
         </div>
       </div>

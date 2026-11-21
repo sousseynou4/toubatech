@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { assertPermission } from '@/lib/auth';
 import { dbErrorMessage } from '@/lib/errors';
+import { createClient } from '@/lib/supabase/server';
 import type { FormState } from './common';
 
 const denied: FormState = { error: dbErrorMessage('PERMISSION_DENIED') };
@@ -219,4 +220,15 @@ export async function setOrderStatus(id: string, status: (typeof ORDER_STATUSES)
   if (error) return { error: dbErrorMessage(error) };
   revalidatePath('/admin', 'layout');
   return { ok: true, message: 'Statut de la commande mis à jour.' };
+}
+
+export async function saveOrderNotes(_p: FormState, form: FormData): Promise<FormState> {
+  const id = String(form.get('id') ?? '');
+  if (!z.uuid().safeParse(id).success) return { error: 'Requête invalide.' };
+  const sb = await createClient();
+  if (!sb) return { error: 'Service indisponible.' };
+  const { error } = await sb.rpc('update_order_notes', { p_order_id: id, p_notes: String(form.get('notes') ?? '').slice(0, 4000) });
+  if (error) return { error: dbErrorMessage(error) };
+  revalidatePath(`/admin/commandes/${id}`);
+  return { ok: true, message: 'Notes enregistrées.' };
 }
