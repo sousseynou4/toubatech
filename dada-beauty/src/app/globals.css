@@ -1,0 +1,111 @@
+@import 'tailwindcss';
+
+/* ═══════════════════════════════════════════════════════════════════
+   DADA BEAUTY — DESIGN SYSTEM
+   Rose poudré · nude · ivoire · champagne · or subtil
+   ═══════════════════════════════════════════════════════════════════ */
+@theme {
+  --font-display: var(--font-cormorant), 'Cormorant Garamond', Georgia, serif;
+  --font-sans: var(--font-dm-sans), 'DM Sans', system-ui, sans-serif;
+
+  --color-ivory: #fffdf9;
+  --color-powder: #ebc4cf;      /* rose poudré principal */
+  --color-powder-50: #fcf5f7;
+  --color-powder-100: #f8e9ed;  /* rose clair */
+  --color-powder-200: #f1d6de;
+  --color-blush: #dfaab9;
+  --color-rosewood: #a65b72;    /* accent lisible (contraste AA sur ivoire) */
+  --color-rosewood-dark: #8a4459;
+  --color-nude: #e8d6cb;
+  --color-nude-50: #f6eee8;
+  --color-champagne: #e7d5b5;
+  --color-gold: #c6a56b;
+  --color-gold-dark: #8f7240;   /* or lisible pour le texte */
+  --color-ink: #292329;
+  --color-ink-soft: #4a3f48;
+  --color-muted: #81747a;
+  --color-line: #eadfe2;
+  --color-admin: #faf5f6;
+  --color-success: #4f7d63;
+  --color-warning: #b07d2b;
+  --color-danger: #b04a4a;
+
+  --radius-card: 1.25rem;
+  --radius-xl2: 1.75rem;
+
+  --shadow-soft: 0 1px 2px rgb(41 35 41 / 0.04), 0 8px 24px -12px rgb(166 91 114 / 0.18);
+  --shadow-lift: 0 2px 4px rgb(41 35 41 / 0.05), 0 18px 40px -18px rgb(166 91 114 / 0.32);
+
+  --animate-fade-up: fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-shimmer: shimmer 2.2s linear infinite;
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes shimmer {
+  from { background-position: -200% 0; }
+  to { background-position: 200% 0; }
+}
+
+@layer base {
+  html { -webkit-tap-highlight-color: transparent; scroll-behavior: smooth; }
+  body {
+    background: var(--color-ivory);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  h1, h2, h3, .font-display { font-family: var(--font-display); letter-spacing: -0.01em; }
+  ::selection { background: var(--color-powder); color: var(--color-ink); }
+  :focus-visible { outline: 2px solid var(--color-rosewood); outline-offset: 2px; border-radius: 6px; }
+  input, select, textarea { font: inherit; }
+}
+
+@layer components {
+  .container-page { width: 100%; max-width: 80rem; margin-inline: auto; padding-inline: 1rem; }
+  @media (min-width: 640px) { .container-page { padding-inline: 1.5rem; } }
+  @media (min-width: 1024px) { .container-page { padding-inline: 2rem; } }
+
+  .eyebrow {
+    font-size: 0.72rem; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--color-gold-dark); font-weight: 600;
+  }
+  .card {
+    background: #fff; border: 1px solid var(--color-line);
+    border-radius: var(--radius-card); box-shadow: var(--shadow-soft);
+  }
+  .field {
+    width: 100%; border-radius: 0.875rem; border: 1px solid var(--color-line); background: #fff;
+    padding: 0.75rem 1rem; font-size: 0.95rem; color: var(--color-ink);
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .field:focus { outline: none; border-color: var(--color-blush); box-shadow: 0 0 0 4px rgb(235 196 207 / 0.45); }
+  .field[aria-invalid='true'] { border-color: var(--color-danger); }
+  .label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--color-ink-soft); margin-bottom: 0.4rem; }
+  .gold-rule { height: 1px; background: linear-gradient(90deg, transparent, var(--color-gold), transparent); }
+
+  /* Visuel éditorial provisoire (à remplacer par une photo depuis l'admin) */
+  .art-placeholder {
+    position: relative; overflow: hidden; isolation: isolate;
+    background:
+      radial-gradient(120% 80% at 20% 10%, rgb(255 253 249 / 0.9), transparent 55%),
+      radial-gradient(90% 70% at 85% 90%, rgb(198 165 107 / 0.35), transparent 60%),
+      linear-gradient(150deg, var(--art-a, #f1d6de), var(--art-b, #e8d6cb));
+  }
+  .art-placeholder::after {
+    content: ''; position: absolute; inset: 0; z-index: -1; opacity: .5;
+    background-image: radial-gradient(rgb(255 255 255 / 0.55) 1px, transparent 1px);
+    background-size: 18px 18px;
+  }
+  .skeleton {
+    background: linear-gradient(90deg, #f6eef0 0%, #fbf6f7 50%, #f6eef0 100%);
+    background-size: 200% 100%; animation: var(--animate-shimmer); border-radius: 0.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}
