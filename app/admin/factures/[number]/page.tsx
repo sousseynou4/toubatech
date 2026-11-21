@@ -16,11 +16,31 @@ const PAYMENTS = 'invoice_payments(paid_at, amount_cents, method)';
 
 export default async function InvoicePage({ params }: { params: { number: string } }) {
   const supabase = getServerSupabase();
-  const { data: invoice } = await supabase
+  const { data: invoice, error } = await supabase
     .from('invoices')
     .select(`*, ${PAYMENTS}`)
     .eq('number', params.number)
-    .single<WithPayments>();
+    .maybeSingle<WithPayments>();
+
+  // Erreur de base (ex. migration pas relancée) : la montrer au lieu d'un faux « introuvable ».
+  if (error) {
+    console.error('[admin/factures] fetch failed:', error);
+    return (
+      <>
+        <AdminHeader />
+        <div className="mx-auto max-w-3xl px-5 py-10 md:px-8">
+          <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-800">
+            <p className="font-medium">La facture {params.number} ne peut pas être affichée.</p>
+            <p className="mt-2">
+              La base de données n&apos;est pas à jour : relancez le fichier complet <code>supabase/migration-invoices.sql</code>{' '}
+              dans Supabase › SQL Editor, puis rechargez cette page. La facture elle-même est bien enregistrée.
+            </p>
+            <p className="mt-2 font-mono text-xs text-red-700">{error.message}</p>
+          </div>
+        </div>
+      </>
+    );
+  }
   if (!invoice) notFound();
 
   // Avoir → facture qu'il annule ; facture → avoir qui l'annule, s'il existe.
