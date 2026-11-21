@@ -27,12 +27,16 @@ test('accueil : CTA de réservation et WhatsApp officiel', async ({ page }) => {
   await expect(page.getByText('Dada Beauty Plus')).toHaveCount(0);
 });
 
-test('navigation principale (menu mobile ou barre desktop)', async ({ page, isMobile }) => {
+test('navigation principale (menu mobile ou barre desktop)', async ({ page }) => {
+  const isMobile = (page.viewportSize()?.width ?? 1440) < 1024; // menu hamburger sous 1024 px
   await page.goto('/');
   if (isMobile) {
-    await page.getByRole('button', { name: 'Ouvrir le menu' }).click();
+    await page.waitForLoadState('networkidle'); // attendre l'hydratation React
     const menu = page.getByRole('dialog', { name: 'Menu' });
-    await expect(menu).toBeVisible();
+    await expect(async () => {
+      await page.getByRole('button', { name: 'Ouvrir le menu' }).click();
+      await expect(menu).toBeVisible({ timeout: 1000 });
+    }).toPass();
     await menu.getByRole('link', { name: 'Nos prestations' }).click();
   } else {
     await page.getByRole('navigation', { name: 'Navigation principale' }).getByRole('link', { name: 'Nos prestations' }).click();

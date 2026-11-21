@@ -11,6 +11,11 @@ import { listAppointments, lowStock } from '@/server/admin/queries';
 
 export const dynamic = 'force-dynamic';
 
+function nextDays(n: number) {
+  const now = new Date();
+  return { from: now.toISOString(), to: new Date(now.getTime() + n * 864e5).toISOString() };
+}
+
 interface Overview {
   appointments_today: number; appointments_pending: number; customers_total: number | null; customers_new_month: number | null;
   low_stock_count: number | null; orders_to_process: number | null; quotes_new: number | null;
@@ -27,7 +32,7 @@ export default async function DashboardPage({ searchParams }: PageProps<'/admin'
 
   const [{ data: ov }, upcoming, recent, stock, series, topServices, perf, settings, events] = await Promise.all([
     sb.rpc('dashboard_overview'),
-    listAppointments(sb, { from: new Date().toISOString(), to: new Date(Date.now() + 14 * 864e5).toISOString(), limit: 40 }),
+    listAppointments(sb, { ...nextDays(14), limit: 40 }),
     listAppointments(sb, { order: 'created', limit: 6 }),
     ctx.can('products.view') ? lowStock(sb, 6) : Promise.resolve([]),
     canFin ? sb.rpc('analytics_revenue_series', { p_from: addDays(today, -29), p_to: today, p_granularity: 'day' }) : Promise.resolve({ data: [] }),

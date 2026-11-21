@@ -22,16 +22,18 @@ export interface WizardSettings {
   waveMerchant: string | null; orangeMerchant: string | null; cancellationPolicy: string | null;
 }
 
+function findInitial(categories: WizardCategory[], slug?: string) {
+  for (const c of categories) {
+    const s = c.services.find((x) => x.slug === slug);
+    if (s) return { cat: c.slug, svc: s.id };
+  }
+  return null;
+}
+
 const STEPS = ['Catégorie', 'Prestation', 'Détails', 'Experte', 'Date', 'Heure', 'Coordonnées', 'Paiement', 'Validation'] as const;
 
 export function BookingWizard({ categories, settings, initialService }: { categories: WizardCategory[]; settings: WizardSettings; initialService?: string }) {
-  const initial = useMemo(() => {
-    for (const c of categories) {
-      const s = c.services.find((x) => x.slug === initialService);
-      if (s) return { cat: c.slug, svc: s.id };
-    }
-    return null;
-  }, [categories, initialService]);
+  const initial = findInitial(categories, initialService);
 
   const [step, setStep] = useState(initial ? 2 : 0);
   const [categorySlug, setCategorySlug] = useState(initial?.cat ?? '');
