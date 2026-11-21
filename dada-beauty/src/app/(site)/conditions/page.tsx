@@ -3,6 +3,7 @@ import { LegalPage, ToComplete } from '@/components/site/legal';
 import { getSettings } from '@/server/catalog';
 import { formatXOF } from '@/lib/format';
 
+export const revalidate = 300;
 export const metadata: Metadata = { title: 'Conditions de réservation et de vente', alternates: { canonical: '/conditions' } };
 
 export default async function Terms() {

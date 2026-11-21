@@ -3,6 +3,7 @@ import { LegalPage, ToComplete } from '@/components/site/legal';
 import { getSettings } from '@/server/catalog';
 import { formatPhone } from '@/lib/phone';
 
+export const revalidate = 300;
 export const metadata: Metadata = { title: 'Mentions légales', alternates: { canonical: '/mentions-legales' } };
 
 export default async function LegalNotice() {
