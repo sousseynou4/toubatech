@@ -1,6 +1,7 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useActionState, useEffect, useState } from 'react';
+import { createBrowserSupabase } from '@/lib/supabase/browser';
 import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -33,11 +34,35 @@ export function LoginForm({ redirect }: { redirect: string }) {
   );
 }
 
+/**
+ * Les emails Supabase par défaut (offre gratuite) renvoient la session dans le
+ * fragment d'URL (#access_token=…). On l'installe dans les cookies avant que
+ * le formulaire n'appelle l'action serveur de changement de mot de passe.
+ */
+function useSessionFromHash() {
+  const [status, setStatus] = useState<'idle' | 'ready' | 'error'>('idle');
+  useEffect(() => {
+    const hash = new URLSearchParams(window.location.hash.slice(1));
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- lecture unique de l'URL au montage
+    if (hash.get('error')) { setStatus('error'); return; }
+    const access_token = hash.get('access_token');
+    const refresh_token = hash.get('refresh_token');
+    if (!access_token || !refresh_token) return;
+    createBrowserSupabase().auth.setSession({ access_token, refresh_token }).then(({ error }) => {
+      window.history.replaceState(null, '', window.location.pathname);
+      setStatus(error ? 'error' : 'ready');
+    });
+  }, []);
+  return status;
+}
+
 export function NewPasswordForm() {
+  const hashStatus = useSessionFromHash();
   const [state, action, pending] = useActionState(updatePassword, null);
   if (state?.ok) return <Alert tone="success" className="mt-4">Mot de passe mis à jour. <Link href="/admin" className="font-semibold underline">Accéder au tableau de bord</Link></Alert>;
   return (
     <form action={action} className="mt-6 grid gap-4">
+      {hashStatus === 'error' && <Alert tone="danger">Ce lien a expiré ou a déjà été utilisé. Demandez un nouveau lien depuis « Mot de passe oublié ».</Alert>}
       {state?.error && <Alert tone="danger">{state.error}</Alert>}
       <Field label="Nouveau mot de passe (12 caractères min.)" htmlFor="pw"><Input id="pw" name="password" type="password" minLength={12} required autoComplete="new-password" /></Field>
       <Field label="Confirmer" htmlFor="pw2"><Input id="pw2" name="confirm" type="password" minLength={12} required autoComplete="new-password" /></Field>
