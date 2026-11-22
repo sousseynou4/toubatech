@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
-import { Check, Loader2, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react';
+import { Check, Loader2, Minus, Plus, ShoppingBag, Tag, Trash2, X } from 'lucide-react';
 import { Button, buttonClass } from '@/components/ui/button';
 import { Alert, Field, Input, Textarea } from '@/components/ui/field';
 import { ArtImage } from '@/components/ui/art-image';
@@ -11,7 +11,7 @@ import { whatsappLink } from '@/lib/phone';
 import { PAYMENT_METHOD_LABEL, type PaymentMethod } from '@/lib/types';
 import { cn } from '@/lib/cn';
 import { cart, useCart } from './cart-store';
-import { submitOrder, type OrderConfirmation } from '@/server/public-actions';
+import { previewPromotion, submitOrder, type OrderConfirmation, type PromotionPreview } from '@/server/public-actions';
 
 export interface CheckoutSettings {
   shopEnabled: boolean; pickupEnabled: boolean; deliveryEnabled: boolean; deliveryFee: number | null; deliveryNote: string | null;
@@ -28,9 +28,28 @@ export function Checkout({ settings }: { settings: CheckoutSettings }) {
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<OrderConfirmation | null>(null);
   const [pending, start] = useTransition();
+  const [promoInput, setPromoInput] = useState('');
+  const [promo, setPromo] = useState<(PromotionPreview & { sig: string }) | null>(null);
+  const [promoError, setPromoError] = useState<string | null>(null);
+  const [promoPending, startPromo] = useTransition();
 
   const subtotal = lines.reduce((s, l) => s + l.unitPrice * l.quantity, 0);
   const fee = fulfillment === 'delivery' ? settings.deliveryFee ?? 0 : 0;
+  // La remise dépend du contenu du panier : si le panier change, le code doit être réappliqué.
+  const cartSig = lines.map((l) => `${l.variantId}:${l.quantity}`).join('|');
+  const activePromo = promo && promo.sig === cartSig ? promo : null;
+  const discount = activePromo ? Math.min(activePromo.discount, subtotal) : 0;
+
+  const applyPromo = () => {
+    const code = promoInput.trim().toUpperCase();
+    if (!code) return;
+    setPromoError(null);
+    startPromo(async () => {
+      const r = await previewPromotion({ code, items: lines.map((l) => ({ variantId: l.variantId, quantity: l.quantity })) });
+      if (r.ok) { setPromo({ ...r.data, sig: cartSig }); setPromoInput(r.data.code); }
+      else { setPromo(null); setPromoError(r.error); }
+    });
+  };
 
   if (done) {
     return (
@@ -40,6 +59,7 @@ export function Checkout({ settings }: { settings: CheckoutSettings }) {
         <div className="card mt-8 p-6 text-left text-sm">
           <p className="flex justify-between"><span className="text-muted">Référence</span><strong className="font-mono" data-testid="order-reference">{done.reference}</strong></p>
           <p className="mt-2 flex justify-between"><span className="text-muted">Code de suivi</span><strong className="font-mono">{done.tracking_code}</strong></p>
+          {done.discount_amount > 0 && <p className="mt-2 flex justify-between"><span className="text-muted">Remise ({done.promotion_code})</span><strong>−{formatXOF(done.discount_amount)}</strong></p>}
           <p className="mt-2 flex justify-between"><span className="text-muted">Total</span><strong>{formatXOF(done.total_amount)}</strong></p>
           <p className="mt-4 rounded-xl bg-powder-50 p-3 text-ink-soft">Le salon vérifie votre commande et vous contacte pour le paiement et le {fulfillment === 'pickup' ? 'retrait' : 'la livraison'}. Aucun paiement n&apos;a été prélevé.</p>
         </div>
@@ -67,7 +87,7 @@ export function Checkout({ settings }: { settings: CheckoutSettings }) {
       const r = await submitOrder({
         items: lines.map((l) => ({ variantId: l.variantId, quantity: l.quantity })), fullName: form.fullName, phone: form.phone,
         email: form.email || undefined, fulfillment, deliveryAddress: form.deliveryAddress || undefined, deliveryNotes: form.deliveryNotes || undefined,
-        paymentMethod: paymentMethod || undefined, marketingConsent: consent,
+        paymentMethod: paymentMethod || undefined, marketingConsent: consent, promotionCode: activePromo?.code,
       });
       if (r.ok) { cart.clear(); setDone(r.data); window.scrollTo({ top: 0 }); }
       else { setError(r.error); setErrors(r.fields ?? {}); }
@@ -130,10 +150,31 @@ export function Checkout({ settings }: { settings: CheckoutSettings }) {
           <input type="checkbox" className="mt-0.5 size-4 accent-[var(--color-rosewood)]" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
           Recevoir les nouveautés et offres (facultatif)
         </label>
+        <div>
+          <label htmlFor="c-promo" className="label">Code promo (facultatif)</label>
+          {activePromo ? (
+            <p className="flex items-center justify-between rounded-2xl border border-rosewood bg-powder-50 px-4 py-2.5 text-sm">
+              <span><Tag className="mr-1.5 inline size-4 text-rosewood" /><strong className="font-mono">{activePromo.code}</strong>
+                {activePromo.description && <span className="text-muted"> · {activePromo.description}</span>}</span>
+              <button type="button" onClick={() => { setPromo(null); setPromoInput(''); }} className="p-1 text-muted hover:text-danger" aria-label="Retirer le code promo"><X className="size-4" /></button>
+            </p>
+          ) : (
+            <div className="flex gap-2">
+              <Input id="c-promo" value={promoInput} onChange={(e) => setPromoInput(e.target.value)} maxLength={30} className="uppercase" autoComplete="off"
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); applyPromo(); } }} />
+              <Button type="button" variant="outline" onClick={applyPromo} disabled={promoPending || !promoInput.trim()}>
+                {promoPending && <Loader2 className="size-4 animate-spin" />} Appliquer
+              </Button>
+            </div>
+          )}
+          {promo && !activePromo && <p className="mt-1.5 text-xs text-warning">Votre panier a changé : appliquez à nouveau le code.</p>}
+          {promoError && <p className="mt-1.5 text-xs text-danger" role="alert">{promoError}</p>}
+        </div>
         <dl className="grid gap-1.5 border-t border-line pt-4 text-sm">
           <div className="flex justify-between"><dt className="text-muted">Sous-total</dt><dd>{formatXOF(subtotal)}</dd></div>
           {fulfillment === 'delivery' && <div className="flex justify-between"><dt className="text-muted">Livraison</dt><dd>{settings.deliveryFee ? formatXOF(fee) : 'À confirmer'}</dd></div>}
-          <div className="flex justify-between text-base font-semibold"><dt>Total</dt><dd>{formatXOF(subtotal + fee)}</dd></div>
+          {discount > 0 && <div className="flex justify-between text-rosewood"><dt>Remise ({activePromo?.code})</dt><dd>−{formatXOF(discount)}</dd></div>}
+          <div className="flex justify-between text-base font-semibold"><dt>Total</dt><dd>{formatXOF(subtotal - discount + fee)}</dd></div>
         </dl>
         <Button type="submit" size="lg" disabled={pending || !settings.shopEnabled}>{pending && <Loader2 className="size-5 animate-spin" />} Valider ma commande</Button>
         {!settings.shopEnabled && <p className="text-xs text-danger">La boutique en ligne est momentanément fermée.</p>}

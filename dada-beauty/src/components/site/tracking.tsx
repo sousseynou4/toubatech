@@ -108,6 +108,7 @@ function OrderLookup() {
           <ul className="mt-4 divide-y divide-line text-sm">
             {order.items.map((i, idx) => <li key={idx} className="flex justify-between py-2"><span>{i.quantity} × {i.label}</span><span>{formatXOF(i.line_total)}</span></li>)}
           </ul>
+          {(order.discount_amount ?? 0) > 0 && <p className="mt-3 flex justify-between text-sm"><span className="text-muted">Remise</span><span>−{formatXOF(order.discount_amount ?? 0)}</span></p>}
           <p className="mt-3 flex justify-between font-semibold"><span>Total</span><span>{formatXOF(order.total_amount)}</span></p>
           {order.history && (
             <ol className="mt-6 border-l border-powder-200 pl-4 text-sm">

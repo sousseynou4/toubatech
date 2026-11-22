@@ -21,7 +21,7 @@ Les données de référence sont dans `supabase/seed.sql`. Ce fichier est idempo
 | Clientes & rendez-vous | `customers` (consentements marketing/photo horodatés), `appointments`, `appointment_services` (instantané prix/durée), `appointment_events` (historique) |
 | Boutique & stock | `suppliers`, `product_categories`, `products`, `product_images`, `product_variants` (porte le stock), `stock_movements` (immuables), `orders` (canal `online` ou `pos`), `order_items`, `order_events` |
 | Finance | `payments`, `payment_events` (webhooks, unicité fournisseur + événement), `cash_sessions` (une seule ouverte à la fois), `cash_transactions` (immuables), `expenses` |
-| Relation client | `reviews` (vérifiés via jeton de rendez-vous terminé), `loyalty_accounts`, `loyalty_transactions`, `promotions`, `gift_cards`, `event_quotes` |
+| Relation client | `reviews` (vérifiés via jeton de rendez-vous terminé), `loyalty_accounts`, `loyalty_transactions`, `promotions`, `gift_cards`, `gift_card_transactions`, `event_quotes` |
 | Communication | `notifications`, `notification_reads`, `message_log` |
 
 Le stockage (Supabase Storage) comprend deux espaces :
@@ -46,7 +46,18 @@ Le stockage (Supabase Storage) comprend deux espaces :
    - Espèces : une caisse ouverte est obligatoire, et chaque mouvement est inscrit en caisse.
    - Le remboursement est plafonné et exige un motif.
 6. **Fidélité :** des points sont attribués une seule fois, uniquement à un rendez-vous **terminé et intégralement payé**, jamais à une absence (`award_appointment_loyalty`).
-7. **Audit :** des triggers `audit_trigger` journalisent les modifications de rendez-vous, paiements, commandes, produits, variantes, prestations, profils, rôles et permissions, paramètres, horaires, caisse, dépenses, cartes cadeaux et devis.
+7. **Codes promo** (`evaluate_promotion`, `consume_promotion`) :
+   - la remise est calculée en base sur les prix réels, en pourcentage (arrondi à l'inférieur) ou en montant fixe plafonné au montant éligible ;
+   - les contrôles portent sur la période, le minimum d'achat (sur le montant éligible), le périmètre et le nombre maximum d'utilisations (ligne verrouillée) ;
+   - l'annulation ou le remboursement d'une commande rend l'utilisation une seule fois (`promotion_released`) ;
+   - en caisse, la remise manuelle s'ajoute au code et reste soumise à `pos.discount`.
+8. **Cartes cadeaux :**
+   - le solde ne change que par `gift_card_transactions` (émission, utilisation, remboursement), registre immuable ;
+   - un trigger interdit toute autre modification du solde, du montant ou du code ;
+   - à l'utilisation (`redeem_gift_card`), la carte est verrouillée, puis son état, son expiration et son solde sont vérifiés ;
+   - un paiement `gift_card` référence toujours sa carte (`payments.gift_card_id`) ;
+   - une vente en espèces entre en caisse (`gift_card_sale`).
+9. **Audit :** des triggers `audit_trigger` journalisent les modifications de rendez-vous, paiements, commandes, produits, variantes, prestations, profils, rôles et permissions, paramètres, horaires, caisse, dépenses, cartes cadeaux et devis.
 
 ## Fonctions (RPC) principales
 

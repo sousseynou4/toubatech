@@ -47,7 +47,7 @@ export default async function OrderDetail({ params }: PageProps<'/admin/commande
             </ul>
             <dl className="grid gap-1 border-t border-line px-5 py-4 text-sm">
               <div className="flex justify-between"><dt className="text-muted">Sous-total</dt><dd>{formatXOF(o.subtotal)}</dd></div>
-              {o.discount_amount > 0 && <div className="flex justify-between"><dt className="text-muted">Remise</dt><dd>−{formatXOF(o.discount_amount)}</dd></div>}
+              {o.discount_amount > 0 && <div className="flex justify-between"><dt className="text-muted">Remise{o.promotion_code ? ` (code ${o.promotion_code})` : ''}</dt><dd>−{formatXOF(o.discount_amount)}</dd></div>}
               {o.delivery_fee > 0 && <div className="flex justify-between"><dt className="text-muted">Livraison</dt><dd>{formatXOF(o.delivery_fee)}</dd></div>}
               <div className="flex justify-between text-base font-semibold"><dt>Total</dt><dd>{formatXOF(o.total_amount)}</dd></div>
               <div className="flex justify-between"><dt className="text-muted">Encaissé</dt><dd>{formatXOF(o.paid_amount)}</dd></div>

@@ -43,6 +43,19 @@ const MESSAGES: Record<string, string> = {
   INSUFFICIENT_POINTS: 'Solde de points insuffisant.',
   APPOINTMENT_CLOSED: 'Ce rendez-vous est clos.',
   ORDER_CLOSED: 'Cette commande est close.',
+  PROMO_INVALID: 'Ce code promo n\'existe pas ou n\'est plus actif.',
+  PROMO_NOT_STARTED: 'Ce code promo n\'est pas encore valable.',
+  PROMO_EXPIRED: 'Ce code promo a expiré.',
+  PROMO_EXHAUSTED: 'Ce code promo a atteint son nombre maximum d\'utilisations.',
+  PROMO_MIN_AMOUNT: 'Le montant minimum pour ce code promo n\'est pas atteint.',
+  PROMO_NOT_APPLICABLE: 'Ce code promo ne s\'applique pas à ces articles.',
+  GIFT_CARD_NOT_FOUND: 'Carte cadeau introuvable : vérifiez le code.',
+  GIFT_CARD_INACTIVE: 'Cette carte cadeau est désactivée.',
+  GIFT_CARD_EXPIRED: 'Cette carte cadeau a expiré.',
+  GIFT_CARD_INSUFFICIENT_BALANCE: 'Solde de la carte cadeau insuffisant.',
+  GIFT_CARD_CODE_REQUIRED: 'Indiquez le code de la carte cadeau.',
+  GIFT_CARD_DIRECT_UPDATE_FORBIDDEN: 'Le solde d\'une carte cadeau ne se modifie pas à la main.',
+  INVALID_PAYMENT_METHOD: 'Moyen de paiement invalide.',
 };
 
 export function dbErrorMessage(err: unknown, fallback = 'Une erreur est survenue. Merci de réessayer.'): string {

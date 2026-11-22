@@ -2,6 +2,24 @@
 
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Versionnage sémantique.
 
+## [0.2.0] — 2026-11-22
+
+### Ajouté
+- **Codes promo appliqués automatiquement** dans la boutique en ligne (champ « Code promo » du panier) et en caisse.
+  - La remise est recalculée par la base sur les prix réels. Elle respecte la période, le minimum d'achat, le périmètre (prestations ou produits) et le nombre maximum d'utilisations.
+  - Une utilisation est rendue si la commande est annulée ou remboursée.
+  - Les frais de livraison ne sont pas remisés.
+- **Cartes cadeaux utilisables comme moyen de paiement**, en caisse (paiement fractionné possible) et à l'encaissement d'un rendez-vous ou d'une commande.
+  - Le solde est vérifié et débité de façon atomique.
+  - Un remboursement recrédite la carte.
+- **Vente de cartes cadeaux** depuis la Caisse ou le menu Fidélité. Une carte vendue en espèces entre dans la caisse. Une carte offerte exige un motif et la permission Fidélité.
+- Registre immuable des mouvements de carte cadeau (`gift_card_transactions`). Il est affiché dans le menu Fidélité.
+- Migration `20261121001400_promotions_gift_cards.sql` et suite de tests SQL `25_promotions_gift_cards.sql`.
+
+### Sécurité
+- Le solde d'une carte cadeau et le compteur d'utilisations d'un code ne sont plus modifiables directement : privilèges par colonne et trigger de garde.
+- L'aperçu public d'un code promo est limité à 20 essais par heure et par client.
+
 ## [0.1.0] — 2026-11-21
 
 ### Ajouté
@@ -37,5 +55,5 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 - Wave : l'adaptateur n'a pas été vérifié contre la documentation officielle (inaccessible pendant le développement). Il faut le tester en staging.
 - Orange Money en ligne : non implémenté (contrat marchand requis).
 - WhatsApp Cloud API : nécessite un compte Meta et des modèles approuvés.
-- Codes promo et cartes cadeaux : non appliqués automatiquement en caisse ni en ligne.
+- Codes promo et cartes cadeaux : non appliqués automatiquement en caisse ni en ligne (corrigé en 0.2.0).
 - Photos, tarifs, durées, horaires et mentions légales (NINEA, RCCM) à fournir par Dada Beauty.

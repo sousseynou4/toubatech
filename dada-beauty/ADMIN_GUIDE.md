@@ -119,8 +119,16 @@ Pour exporter : boutons **CSV** (s'ouvrent dans Excel) ou **Imprimer / PDF**.
 
 - **Fidélité :**
   - les points s'activent dans Paramètres → Fidélité ;
-  - les promotions et cartes cadeaux se créent et se suivent dans le menu Fidélité. **Elles ne sont pas encore
-    appliquées automatiquement** en caisse : appliquez la remise manuellement et notez le code.
+  - **codes promo :**
+    - ils se créent dans le menu Fidélité ;
+    - la cliente les saisit dans son panier, et l'équipe les saisit en caisse (« Code promo » → Appliquer) ;
+    - la remise est calculée automatiquement ;
+    - si une commande est annulée, l'utilisation du code est rendue ;
+  - **cartes cadeaux :**
+    - pour les vendre : Caisse → « Vendre une carte cadeau », ou menu Fidélité. Le code est généré automatiquement ;
+    - pour les utiliser : choisissez « Carte cadeau » comme moyen de paiement, en caisse ou dans « Encaisser », puis saisissez le code (bouton « Vérifier » pour voir le solde) ;
+    - un remboursement recrédite la carte ;
+    - l'historique des mouvements est dans le menu Fidélité.
 - **Avis :**
   - après une prestation terminée, envoyez la « Demande d'avis » WhatsApp ;
   - les avis arrivent en modération et vous choisissez ceux qui sont publiés.

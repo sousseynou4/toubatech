@@ -2,7 +2,8 @@
 
 import { createPublicClient } from '@/lib/supabase/public';
 import { createServiceClient } from '@/lib/supabase/admin';
-import { bookingSchema, fieldErrors, lookupSchema, orderSchema, quoteSchema, reviewSchema, slotsQuerySchema } from '@/lib/validation';
+import { bookingSchema, cartItemSchema, fieldErrors, lookupSchema, orderSchema, promoCodeSchema, quoteSchema, reviewSchema, slotsQuerySchema } from '@/lib/validation';
+import { z } from 'zod';
 import { dbErrorMessage } from '@/lib/errors';
 import { clientKey } from '@/lib/request';
 
@@ -86,7 +87,30 @@ export async function cancelBooking(input: { reference: string; phone: string; r
   return { ok: true, data: data as { status: string } };
 }
 
-export interface OrderConfirmation { order_id: string; reference: string; tracking_code: string; total_amount: number; subtotal: number; delivery_fee: number; status: string }
+export interface OrderConfirmation {
+  order_id: string; reference: string; tracking_code: string; total_amount: number; subtotal: number;
+  discount_amount: number; promotion_code: string | null; delivery_fee: number; status: string;
+}
+
+export interface PromotionPreview { code: string; description: string | null; discount: number }
+
+/** Aperçu d'un code promo sur le panier : la remise est calculée en base, sur les prix réels. */
+export async function previewPromotion(input: { code: string; items: { variantId: string; quantity: number }[] }): Promise<ActionResult<PromotionPreview>> {
+  const parsed = z.object({ code: promoCodeSchema, items: z.array(cartItemSchema).min(1).max(30) }).safeParse(input);
+  if (!parsed.success) return { ok: false, error: dbErrorMessage('PROMO_INVALID') };
+  const sb = createPublicClient();
+  if (!sb) return NOT_CONFIGURED;
+  const { data, error } = await sb.rpc('check_promotion', {
+    p_code: parsed.data.code, p_items: parsed.data.items.map((i) => ({ variant_id: i.variantId, quantity: i.quantity })), p_client_key: await clientKey(),
+  });
+  if (error) return { ok: false, error: dbErrorMessage(error) };
+  const r = data as { ok: boolean; reason?: string; code?: string; description?: string | null; discount?: number; min_amount?: number };
+  if (!r.ok) {
+    const msg = dbErrorMessage(r.reason ?? 'PROMO_INVALID');
+    return { ok: false, error: r.reason === 'PROMO_MIN_AMOUNT' && r.min_amount ? `${msg} (minimum : ${new Intl.NumberFormat('fr-FR').format(r.min_amount)} FCFA)` : msg };
+  }
+  return { ok: true, data: { code: r.code ?? parsed.data.code, description: r.description ?? null, discount: r.discount ?? 0 } };
+}
 
 export async function submitOrder(input: unknown): Promise<ActionResult<OrderConfirmation>> {
   const parsed = orderSchema.safeParse(input);
@@ -99,6 +123,7 @@ export async function submitOrder(input: unknown): Promise<ActionResult<OrderCon
     p_full_name: d.fullName, p_phone: d.phone, p_email: d.email ?? null, p_fulfillment: d.fulfillment,
     p_delivery_address: d.deliveryAddress ?? null, p_delivery_notes: d.deliveryNotes ?? null,
     p_payment_method: d.paymentMethod ?? null, p_marketing_consent: d.marketingConsent, p_client_key: await clientKey(),
+    p_promotion_code: d.promotionCode ?? null,
   });
   if (error) return { ok: false, error: dbErrorMessage(error) };
   return { ok: true, data: data as OrderConfirmation };
@@ -106,6 +131,7 @@ export async function submitOrder(input: unknown): Promise<ActionResult<OrderCon
 
 export interface TrackedOrder {
   reference: string; status: string; fulfillment: string; total_amount: number; paid_amount: number; created_at: string;
+  subtotal?: number; discount_amount?: number; delivery_fee?: number;
   items: { label: string; quantity: number; line_total: number }[]; history: { status: string; at: string }[] | null;
 }
 
