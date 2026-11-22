@@ -121,9 +121,10 @@ Pour exporter : boutons **CSV** (s'ouvrent dans Excel) ou **Imprimer / PDF**.
   - les points s'activent dans Paramètres → Fidélité ;
   - **codes promo :**
     - ils se créent dans le menu Fidélité ;
-    - la cliente les saisit dans son panier, et l'équipe les saisit en caisse (« Code promo » → Appliquer) ;
+    - la cliente les saisit dans son panier ou au récapitulatif de sa réservation en ligne ; l'équipe les saisit en caisse (« Code promo » → Appliquer) ;
+    - pour une réservation, l'acompte est calculé sur le prix remisé ; utilisez « S'applique à : Prestations » ou « Tout » ;
     - la remise est calculée automatiquement ;
-    - si une commande est annulée, l'utilisation du code est rendue ;
+    - si une commande ou un rendez-vous est annulé, l'utilisation du code est rendue ;
   - **cartes cadeaux :**
     - pour les vendre : Caisse → « Vendre une carte cadeau », ou menu Fidélité. Le code est généré automatiquement ;
     - pour les utiliser : choisissez « Carte cadeau » comme moyen de paiement, en caisse ou dans « Encaisser », puis saisissez le code (bouton « Vérifier » pour voir le solde) ;

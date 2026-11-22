@@ -2,6 +2,17 @@
 
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Versionnage sémantique.
 
+## [0.4.0] — 2026-11-22
+
+### Ajouté
+- **Codes promo sur les réservations en ligne.** La cliente saisit son code au récapitulatif. Elle voit aussitôt le prix, la remise, le total et l'acompte, tous calculés en base.
+  - L'acompte est recalculé sur le montant remisé : par exemple 15 000 − 20 % = 12 000, et un acompte de 30 % fait 3 600 au lieu de 4 500.
+  - La remise et le code apparaissent sur la confirmation, sur le suivi « Suivre une réservation » et sur la fiche rendez-vous de l'admin.
+  - Une annulation, par la cliente ou par l'équipe, rend l'utilisation du code, une seule fois.
+  - Un code refusé (épuisé, expiré, minimum non atteint, réservé aux produits) bloque la réservation sans prendre le créneau.
+  - Les statistiques déduisent ces remises du chiffre d'affaires net : les prestations restent comptées au prix catalogue.
+- Migration `20261122000200_booking_promotions.sql`, tests SQL `27_booking_promotions.sql`.
+
 ## [0.3.0] — 2026-11-22
 
 ### Ajouté

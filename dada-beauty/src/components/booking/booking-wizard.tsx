@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Check, ChevronLeft, ChevronRight, Clock, Loader2, MessageCircle, User, Wallet } from 'lucide-react';
+import { ArrowLeft, Check, ChevronLeft, ChevronRight, Clock, Loader2, MessageCircle, Tag, User, Wallet, X } from 'lucide-react';
 import { Button, buttonClass } from '@/components/ui/button';
 import { Alert, Field, Input, Textarea } from '@/components/ui/field';
 import { ArtImage } from '@/components/ui/art-image';
@@ -10,7 +10,7 @@ import { addDays, formatDate, formatDuration, formatPrice, formatTime, formatXOF
 import { whatsappLink } from '@/lib/phone';
 import { PAYMENT_METHOD_LABEL, type PaymentMethod } from '@/lib/types';
 import { cn } from '@/lib/cn';
-import { fetchServiceEmployees, fetchSlots, submitBooking, type BookingConfirmation, type Slot } from '@/server/public-actions';
+import { fetchServiceEmployees, fetchSlots, previewBookingPromotion, submitBooking, type BookingConfirmation, type BookingPromotionPreview, type Slot } from '@/server/public-actions';
 
 export interface WizardService {
   id: string; slug: string; name: string; short_description: string | null; description: string | null; price: number;
@@ -54,9 +54,26 @@ export function BookingWizard({ categories, settings, initialService }: { catego
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<BookingConfirmation | null>(null);
   const [pending, startTransition] = useTransition();
+  const [promoInput, setPromoInput] = useState('');
+  const [promo, setPromo] = useState<(BookingPromotionPreview & { serviceId: string }) | null>(null);
+  const [promoError, setPromoError] = useState<string | null>(null);
+  const [promoPending, startPromo] = useTransition();
 
   const category = categories.find((c) => c.slug === categorySlug);
   const service = categories.flatMap((c) => c.services).find((s) => s.id === serviceId);
+  // La remise est liée à la prestation choisie : si elle change, le code doit être réappliqué.
+  const activePromo = promo && promo.serviceId === serviceId ? promo : null;
+
+  function applyPromo() {
+    const code = promoInput.trim().toUpperCase();
+    if (!code || !serviceId) return;
+    setPromoError(null);
+    startPromo(async () => {
+      const r = await previewBookingPromotion({ code, serviceId });
+      if (r.ok) { setPromo({ ...r.data, serviceId }); setPromoInput(r.data.code); }
+      else { setPromo(null); setPromoError(r.error); }
+    });
+  }
   const today = todayInDakar();
   const days = useMemo(() => Array.from({ length: Math.min(settings.maxDaysAhead + 1, 120) }, (_, i) => addDays(today, i)), [today, settings.maxDaysAhead]);
   const visibleDays = days.slice(weekOffset * 7, weekOffset * 7 + 7);
@@ -99,7 +116,7 @@ export function BookingWizard({ categories, settings, initialService }: { catego
       const r = await submitBooking({
         serviceId: service.id, employeeId: employeeId || undefined, start: slot.start, fullName: contact.fullName,
         phone: contact.phone, email: contact.email || undefined, notes: contact.notes || undefined,
-        paymentMethod: paymentMethod || undefined, marketingConsent, acceptTerms,
+        paymentMethod: paymentMethod || undefined, marketingConsent, acceptTerms, promotionCode: activePromo?.code,
       });
       if (r.ok) { setResult(r.data); setStep(9); window.scrollTo({ top: 0 }); return; }
       if (r.error.includes('créneau')) {
@@ -107,6 +124,8 @@ export function BookingWizard({ categories, settings, initialService }: { catego
         // go() efface l'erreur, elle est donc posée après.
         setSlot(null); go(5); setSlotsVersion((v) => v + 1);
       }
+      // Code devenu invalide entre l'aperçu et la validation (épuisé, expiré…) : on le retire pour permettre de réserver sans.
+      if (r.error.startsWith('Ce code promo') || r.error.startsWith('Le montant minimum')) { setPromo(null); setPromoError(r.error); }
       setError(r.error);
       if (r.fields) setErrors(r.fields);
     });
@@ -137,6 +156,7 @@ export function BookingWizard({ categories, settings, initialService }: { catego
             <Row label="Prestation" value={result.service_name} />
             <Row label="Date" value={`${formatDate(result.start_at)} à ${formatTime(result.start_at)}`} />
             <Row label="Avec" value={result.employee_name} />
+            {result.discount_amount > 0 && <Row label={`Remise (${result.promotion_code})`} value={`−${formatXOF(result.discount_amount)}`} />}
             <Row label="Montant" value={formatXOF(result.total_amount)} />
             {result.deposit_required > 0 && <Row label="Acompte à régler" value={formatXOF(result.deposit_required)} />}
           </dl>
@@ -331,9 +351,39 @@ export function BookingWizard({ categories, settings, initialService }: { catego
               <Row label="Téléphone" value={contact.phone} />
               {paymentMethod && <Row label="Paiement" value={PAYMENT_METHOD_LABEL[paymentMethod]} />}
               <div className="gold-rule my-2" />
-              <Row label="Total" value={formatPrice(service.price, service.price_is_from)} strong />
-              {service.deposit > 0 && <Row label="Acompte" value={formatXOF(service.deposit)} />}
+              {activePromo ? (
+                <>
+                  <Row label="Prix" value={formatPrice(service.price, service.price_is_from)} />
+                  <Row label={`Remise (${activePromo.code})`} value={`−${formatXOF(activePromo.discount)}`} />
+                  <Row label="Total" value={formatXOF(activePromo.total_amount)} strong />
+                  {activePromo.deposit_required > 0 && <Row label="Acompte" value={formatXOF(activePromo.deposit_required)} />}
+                </>
+              ) : (
+                <>
+                  <Row label="Total" value={formatPrice(service.price, service.price_is_from)} strong />
+                  {service.deposit > 0 && <Row label="Acompte" value={formatXOF(service.deposit)} />}
+                </>
+              )}
             </dl>
+            <div className="mt-5">
+              <label htmlFor="b-promo" className="label">Code promo (facultatif)</label>
+              {activePromo ? (
+                <p className="flex items-center justify-between rounded-2xl border border-rosewood bg-powder-50 px-4 py-2.5 text-sm">
+                  <span><Tag className="mr-1.5 inline size-4 text-rosewood" /><strong className="font-mono">{activePromo.code}</strong>
+                    {activePromo.description && <span className="text-muted"> · {activePromo.description}</span>}</span>
+                  <button type="button" onClick={() => { setPromo(null); setPromoInput(''); }} className="p-1 text-muted hover:text-danger" aria-label="Retirer le code promo"><X className="size-4" /></button>
+                </p>
+              ) : (
+                <div className="flex gap-2">
+                  <Input id="b-promo" value={promoInput} onChange={(e) => setPromoInput(e.target.value)} maxLength={30} className="uppercase" autoComplete="off"
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); applyPromo(); } }} />
+                  <Button type="button" variant="outline" onClick={applyPromo} disabled={promoPending || !promoInput.trim()}>
+                    {promoPending && <Loader2 className="size-4 animate-spin" />} Appliquer
+                  </Button>
+                </div>
+              )}
+              {promoError && <p className="mt-1.5 text-xs text-danger" role="alert">{promoError}</p>}
+            </div>
             {settings.cancellationPolicy && <p className="mt-5 whitespace-pre-line rounded-xl bg-powder-50 p-3 text-xs text-ink-soft">{settings.cancellationPolicy}</p>}
             <label className="mt-5 flex items-start gap-3 text-sm">
               <input type="checkbox" className="mt-0.5 size-4 accent-[var(--color-rosewood)]" checked={acceptTerms} onChange={(e) => setAcceptTerms(e.target.checked)} />

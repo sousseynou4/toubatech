@@ -44,6 +44,25 @@ export async function fetchServiceEmployees(serviceId: string): Promise<ActionRe
 export interface BookingConfirmation {
   reference: string; status: string; start_at: string; end_at: string; service_name: string;
   employee_name: string; total_amount: number; deposit_required: number;
+  discount_amount: number; promotion_code: string | null;
+}
+
+export interface BookingPromotionPreview { code: string; description: string | null; discount: number; total_amount: number; deposit_required: number }
+
+/** Aperçu d'un code promo sur une prestation : remise, total et acompte calculés en base. */
+export async function previewBookingPromotion(input: { code: string; serviceId: string }): Promise<ActionResult<BookingPromotionPreview>> {
+  const parsed = z.object({ code: promoCodeSchema, serviceId: z.uuid() }).safeParse(input);
+  if (!parsed.success) return { ok: false, error: dbErrorMessage('PROMO_INVALID') };
+  const sb = createPublicClient();
+  if (!sb) return NOT_CONFIGURED;
+  const { data, error } = await sb.rpc('check_booking_promotion', { p_code: parsed.data.code, p_service_id: parsed.data.serviceId, p_client_key: await clientKey() });
+  if (error) return { ok: false, error: dbErrorMessage(error) };
+  const r = data as { ok: boolean; reason?: string; min_amount?: number } & Partial<BookingPromotionPreview>;
+  if (!r.ok) {
+    const msg = dbErrorMessage(r.reason ?? 'PROMO_INVALID');
+    return { ok: false, error: r.reason === 'PROMO_MIN_AMOUNT' && r.min_amount ? `${msg} (minimum : ${new Intl.NumberFormat('fr-FR').format(r.min_amount)} FCFA)` : msg };
+  }
+  return { ok: true, data: { code: r.code ?? parsed.data.code, description: r.description ?? null, discount: r.discount ?? 0, total_amount: r.total_amount ?? 0, deposit_required: r.deposit_required ?? 0 } };
 }
 
 export async function submitBooking(input: unknown): Promise<ActionResult<BookingConfirmation>> {
@@ -56,6 +75,7 @@ export async function submitBooking(input: unknown): Promise<ActionResult<Bookin
     p_service_id: d.serviceId, p_start: d.start, p_employee_id: d.employeeId ?? null,
     p_full_name: d.fullName, p_phone: d.phone, p_email: d.email ?? null, p_notes: d.notes ?? null,
     p_marketing_consent: d.marketingConsent, p_payment_method: d.paymentMethod ?? null, p_client_key: await clientKey(),
+    p_promotion_code: d.promotionCode ?? null,
   });
   if (error) return { ok: false, error: dbErrorMessage(error) };
   return { ok: true, data: data as BookingConfirmation };
@@ -63,6 +83,7 @@ export async function submitBooking(input: unknown): Promise<ActionResult<Bookin
 
 export interface PublicBooking {
   reference: string; status: string; start_at: string; end_at: string; total_amount: number; deposit_required: number;
+  discount_amount?: number; promotion_code?: string | null;
   paid_amount: number; employee_name: string; services: { name: string; price: number; duration: number }[];
 }
 

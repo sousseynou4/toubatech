@@ -67,6 +67,7 @@ function BookingLookup() {
           <p className="mt-4 font-display text-2xl">{booking.services.map((s) => s.name).join(', ')}</p>
           <p className="mt-1 text-ink-soft">{formatDate(booking.start_at)} à {formatTime(booking.start_at)} · avec {booking.employee_name}</p>
           <dl className="mt-4 grid gap-1 text-sm">
+            {(booking.discount_amount ?? 0) > 0 && <div className="flex justify-between"><dt className="text-muted">Remise ({booking.promotion_code})</dt><dd>−{formatXOF(booking.discount_amount ?? 0)}</dd></div>}
             <div className="flex justify-between"><dt className="text-muted">Montant</dt><dd>{formatXOF(booking.total_amount)}</dd></div>
             {booking.deposit_required > 0 && <div className="flex justify-between"><dt className="text-muted">Acompte</dt><dd>{formatXOF(booking.deposit_required)}</dd></div>}
             <div className="flex justify-between"><dt className="text-muted">Déjà réglé</dt><dd>{formatXOF(booking.paid_amount)}</dd></div>

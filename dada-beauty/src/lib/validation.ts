@@ -24,6 +24,9 @@ const optionalEmail = z
 
 export const paymentMethodSchema = z.enum(['cash', 'wave', 'orange_money', 'card', 'bank_transfer', 'other']);
 
+/** Code promo saisi par la cliente ou l'équipe (normalisé en majuscules, comme en base). */
+export const promoCodeSchema = z.string().trim().toUpperCase().regex(/^[A-Z0-9_-]{3,30}$/, 'Code promo invalide');
+
 export const bookingSchema = z.object({
   serviceId: z.uuid(),
   employeeId: z.uuid().optional().or(z.literal('').transform(() => undefined)),
@@ -35,6 +38,7 @@ export const bookingSchema = z.object({
   paymentMethod: paymentMethodSchema.optional(),
   marketingConsent: z.boolean().default(false),
   acceptTerms: z.literal(true, { error: 'Merci d\'accepter les conditions de réservation' }),
+  promotionCode: promoCodeSchema.optional(),
 });
 export type BookingInput = z.input<typeof bookingSchema>;
 
@@ -43,9 +47,6 @@ export const slotsQuerySchema = z.object({
   date: z.iso.date(),
   employeeId: z.uuid().optional(),
 });
-
-/** Code promo saisi par la cliente ou l'équipe (normalisé en majuscules, comme en base). */
-export const promoCodeSchema = z.string().trim().toUpperCase().regex(/^[A-Z0-9_-]{3,30}$/, 'Code promo invalide');
 
 export const cartItemSchema = z.object({ variantId: z.uuid(), quantity: z.number().int().min(1).max(20) });
 
