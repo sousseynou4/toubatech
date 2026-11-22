@@ -1,5 +1,6 @@
 'use client';
 
+import { MEDIA_CATEGORIES, QUOTE_STATUS_LABEL, SLOT_LABEL } from '@/lib/media';
 import { useActionState, useState, useTransition } from 'react';
 import Image from 'next/image';
 import { Check, Trash2, X } from 'lucide-react';
@@ -11,10 +12,6 @@ import { CustomerPicker } from '@/components/admin/customer-picker';
 import { deleteMedia, deleteReview, moderateReview, updateMedia, updateQuote, uploadMedia } from '@/server/admin/content';
 import type { FormState } from '@/server/admin/common';
 
-export const MEDIA_CATEGORIES = [
-  ['makeup', 'Makeup'], ['onglerie', 'Onglerie'], ['cils-sourcils', 'Cils & sourcils'], ['coiffure-perruques', 'Coiffure & perruques'], ['boutique', 'Boutique'], ['salon', 'Salon'],
-] as const;
-export const SLOT_LABEL: Record<string, string> = { home_hero: 'Grande photo de l\'accueil', about: 'Photo « Notre univers / À propos »' };
 
 function MetaFields({ m, categories }: { m?: MediaValues; categories: { id: string; name: string }[] }) {
   return (
@@ -110,9 +107,6 @@ export function QuoteForm({ quote }: { quote: { id: string; status: string; quot
   );
 }
 
-export const QUOTE_STATUS_LABEL: Record<string, string> = {
-  new: 'Nouvelle', contacted: 'Contactée', quoted: 'Devis envoyé', accepted: 'Accepté', declined: 'Refusé', cancelled: 'Annulé',
-};
 
 export function ReviewActions({ id, status }: { id: string; status: string }) {
   const [pending, start] = useTransition();

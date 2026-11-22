@@ -3,7 +3,8 @@ import Link from 'next/link';
 import { ArtImage } from '@/components/ui/art-image';
 import { Section, SectionHeading } from '@/components/ui/section';
 import { Alert } from '@/components/ui/field';
-import { getGallery } from '@/server/catalog';
+import { getGallery, getSettings, getSocialVideos } from '@/server/catalog';
+import { TikTokEmbed } from '@/components/site/tiktok-embed';
 import { cn } from '@/lib/cn';
 
 export const revalidate = 300;
@@ -24,7 +25,7 @@ const FILTERS = [
 export default async function GalleryPage({ searchParams }: PageProps<'/galerie'>) {
   const { categorie } = await searchParams;
   const cat = typeof categorie === 'string' && FILTERS.some((f) => f.value === categorie) ? categorie : '';
-  const items = await getGallery(cat || undefined, 120);
+  const [items, videos, { settings }] = await Promise.all([getGallery(cat || undefined, 120), getSocialVideos(cat || undefined, 24), getSettings()]);
   return (
     <Section>
       <SectionHeading as="h1" eyebrow="Galerie" title={<>Nos <em className="text-rosewood">réalisations</em></>} intro="Les photos de clientes sont publiées uniquement avec leur accord explicite." />
@@ -36,9 +37,9 @@ export default async function GalleryPage({ searchParams }: PageProps<'/galerie'
           </Link>
         ))}
       </nav>
-      {items.length === 0 ? (
+      {items.length === 0 && videos.length === 0 ? (
         <Alert className="mt-10">La galerie sera bientôt alimentée avec les réalisations du salon. Suivez-nous sur nos réseaux en attendant !</Alert>
-      ) : (
+      ) : items.length > 0 && (
         <div className="mt-10 columns-2 gap-3 sm:columns-3 lg:columns-4 [&>*]:mb-3">
           {items.map((m, i) => (
             <figure key={m.id} className="break-inside-avoid">
@@ -47,6 +48,20 @@ export default async function GalleryPage({ searchParams }: PageProps<'/galerie'
             </figure>
           ))}
         </div>
+      )}
+      {videos.length > 0 && (
+        <section aria-labelledby="videos-title" className="mt-14">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <h2 id="videos-title" className="font-display text-3xl">En <em className="text-rosewood">vidéo</em></h2>
+            {settings.tiktok_url && (
+              <a href={settings.tiktok_url} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-rosewood hover:underline">Suivre sur TikTok →</a>
+            )}
+          </div>
+          <p className="mt-2 text-sm text-muted">Les vidéos sont lues avec le lecteur TikTok, uniquement quand vous les lancez.</p>
+          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {videos.map((v) => <TikTokEmbed key={v.id} videoId={v.video_id} title={v.title} url={v.url} />)}
+          </div>
+        </section>
       )}
     </Section>
   );

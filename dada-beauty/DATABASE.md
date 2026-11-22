@@ -17,7 +17,7 @@ Les données de référence sont dans `supabase/seed.sql`. Ce fichier est idempo
 | Domaine | Tables |
 |---|---|
 | Système | `business_settings` (ligne unique), `roles`, `permissions`, `role_permissions`, `profiles` (1:1 `auth.users`), `audit_logs`, `rate_limits` |
-| Catalogue & équipe | `service_categories`, `services`, `employees`, `employee_services`, `business_hours`, `business_closures`, `employee_schedules` (plusieurs plages par jour, les trous sont les pauses), `employee_time_off` (`tstzrange`), `media_assets` |
+| Catalogue & équipe | `service_categories`, `services`, `employees`, `employee_services`, `business_hours`, `business_closures`, `employee_schedules` (plusieurs plages par jour, les trous sont les pauses), `employee_time_off` (`tstzrange`), `media_assets`, `social_videos` (vidéos TikTok intégrées : identifiant seulement, aucune copie) |
 | Clientes & rendez-vous | `customers` (consentements marketing/photo horodatés), `appointments`, `appointment_services` (instantané prix/durée), `appointment_events` (historique) |
 | Boutique & stock | `suppliers`, `product_categories`, `products`, `product_images`, `product_variants` (porte le stock), `stock_movements` (immuables), `orders` (canal `online` ou `pos`), `order_items`, `order_events` |
 | Finance | `payments`, `payment_events` (webhooks, unicité fournisseur + événement), `cash_sessions` (une seule ouverte à la fois), `cash_transactions` (immuables), `expenses` |

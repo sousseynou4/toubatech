@@ -66,7 +66,7 @@ stocks, statistiques et rôles.
 - **Codes promo sur la réservation en ligne :** les codes s'appliquent dans la boutique et en caisse, pas encore à l'acompte d'une réservation en ligne.
 - **Mentions légales :** NINEA, RCCM, responsable de publication et durées de conservation sont à compléter (signalés « à compléter » sur le site).
 - **Recette sur le projet Supabase (22/11/2026) :**
-  - les 12 migrations sont appliquées ;
+  - les 13 migrations sont appliquées ;
   - les 8 suites de tests SQL passent sur la vraie base, dans des transactions annulées ;
   - un parcours navigateur complet a été validé contre la vraie base : commande en ligne avec code promo, connexion équipe, vente d'une carte cadeau, vente en caisse avec code promo payée par carte cadeau, encaissement d'une commande par carte cadeau, registre Fidélité. Les données de test ont été supprimées ensuite ;
   - deuxième parcours validé contre la vraie base :

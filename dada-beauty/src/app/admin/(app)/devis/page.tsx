@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { requireStaff } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { EmptyState, PageHeader, Panel, Table } from '@/components/admin/ui';
-import { QUOTE_STATUS_LABEL } from '@/components/admin/salon/content-forms';
+import { QUOTE_STATUS_LABEL } from '@/lib/media';
 import { Badge, type Tone } from '@/components/ui/badge';
 import { formatShortDate, formatXOF } from '@/lib/format';
 import { cn } from '@/lib/cn';

@@ -2,6 +2,20 @@
 
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Versionnage sémantique.
 
+## [0.3.0] — 2026-11-22
+
+### Ajouté
+- **Vidéos TikTok dans la galerie.**
+  - Dans Admin → Galerie & médias → « Vidéos TikTok », l'équipe colle le lien d'une vidéo et choisit un titre, une catégorie, un ordre et la publication.
+  - Le site affiche une section « En vidéo » qui suit les filtres de la galerie.
+  - La lecture passe par le lecteur officiel TikTok, chargé seulement au clic : aucun script ni cookie TikTok avant que la visiteuse lance la vidéo.
+  - Aucune vidéo n'est copiée ni hébergée.
+- Les liens courts de l'application (vm.tiktok.com…) sont résolus côté serveur, sans jamais quitter les domaines TikTok.
+- Migration `20261122000100_social_videos.sql`, tests SQL `26_social_videos.sql`, tests unitaires `tiktok.test.ts`.
+
+### Corrigé
+- **Admin → Galerie, Devis et Statistiques :** des constantes (catégories de médias, statuts de devis, couleurs des graphiques) étaient importées côté serveur depuis des modules client. La page Galerie plantait, et les libellés pouvaient être vides. Ces constantes sont déplacées dans `src/lib/media.ts` et `src/lib/chart-colors.ts`, et un test (`client-boundary.test.ts`) bloque toute récidive.
+
 ## [0.2.0] — 2026-11-22
 
 ### Ajouté

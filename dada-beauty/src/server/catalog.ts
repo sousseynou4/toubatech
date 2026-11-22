@@ -102,6 +102,19 @@ export const getGallery = cache(async (category?: string, limit = 60): Promise<M
   return (data ?? []) as MediaAsset[];
 });
 
+export interface SocialVideo { id: string; video_id: string; url: string; author_handle: string | null; title: string | null; category: string | null }
+
+/** Vidéos TikTok publiées (lecteur officiel ; aucune copie hébergée). */
+export const getSocialVideos = cache(async (category?: string, limit = 24): Promise<SocialVideo[]> => {
+  const sb = createPublicClient();
+  if (!sb) return [];
+  let q = sb.from('social_videos').select('id, video_id, url, author_handle, title, category').eq('is_published', true)
+    .order('sort_order').order('created_at', { ascending: false }).limit(limit);
+  if (category) q = q.eq('category', category);
+  const { data } = await q;
+  return (data ?? []) as SocialVideo[];
+});
+
 /** Médias éditoriaux par emplacement (home_hero, about…). */
 export const getSlots = cache(async (): Promise<Record<string, MediaAsset>> => {
   const sb = createPublicClient();
