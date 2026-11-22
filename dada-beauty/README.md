@@ -69,4 +69,9 @@ stocks, statistiques et rôles.
   - les 12 migrations sont appliquées ;
   - les 8 suites de tests SQL passent sur la vraie base, dans des transactions annulées ;
   - un parcours navigateur complet a été validé contre la vraie base : commande en ligne avec code promo, connexion équipe, vente d'une carte cadeau, vente en caisse avec code promo payée par carte cadeau, encaissement d'une commande par carte cadeau, registre Fidélité. Les données de test ont été supprimées ensuite ;
-  - **restent à vérifier à la main :** l'envoi d'images (galerie, devis), les invitations par email (SMTP), la réservation complète dans le navigateur et l'ouverture/clôture de caisse en espèces.
+  - deuxième parcours validé contre la vraie base :
+    - réservation en ligne complète (10 étapes, acompte de 30 %) ;
+    - deux réservations simultanées du même créneau : une seule est acceptée ;
+    - ouverture de caisse, acompte en espèces, démarrage puis fin du rendez-vous, solde par Wave ;
+    - vente en espèces, retrait, clôture avec écart (27 500 attendus, 27 000 comptés, −500) ;
+  - **restent à vérifier à la main :** l'envoi d'images (galerie, devis) et les invitations par email (SMTP).

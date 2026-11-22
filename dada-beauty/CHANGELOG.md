@@ -16,6 +16,10 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 - Registre immuable des mouvements de carte cadeau (`gift_card_transactions`). Il est affiché dans le menu Fidélité.
 - Migration `20261121001400_promotions_gift_cards.sql` et suite de tests SQL `25_promotions_gift_cards.sql`.
 
+### Corrigé (trouvé pendant la recette sur Supabase)
+- Réservation : quand le créneau était pris par une autre cliente au même moment, la cliente refusée revenait au choix de l'heure **sans message**, et le créneau restait affiché. Le message s'affiche maintenant, et les disponibilités sont rechargées.
+- Caisse : après la clôture, le récapitulatif (attendu, compté, écart) disparaissait aussitôt. La page affiche désormais la dernière clôture et son écart.
+
 ### Sécurité
 - Le solde d'une carte cadeau et le compteur d'utilisations d'un code ne sont plus modifiables directement : privilèges par colonne et trigger de garde.
 - L'aperçu public d'un code promo est limité à 20 essais par heure et par client.

@@ -9,6 +9,7 @@ import { CashMovementForm, CloseCashForm, OpenCashForm } from '@/components/admi
 import { CASH_CATEGORY_LABEL } from '@/components/admin/commerce/labels';
 import { GiftCardForm } from '@/components/admin/system/loyalty-forms';
 import { formatDateTime, formatTime, formatXOF } from '@/lib/format';
+import { Alert } from '@/components/ui/field';
 
 export const metadata = { title: 'Caisse' };
 
@@ -28,6 +29,10 @@ export default async function CashierPage() {
     .map((s) => ({ id: s.id, name: s.name, price: s.price, category: s.category?.name ?? '' }));
 
   const canCash = ctx.can('cash.manage');
+  // Caisse fermée : rappel de la dernière clôture (sinon l'écart disparaît dès la clôture validée).
+  const { data: lastClosed } = !session && canCash
+    ? await sb.from('cash_sessions').select('closed_at, expected_cash, counted_cash, difference').not('closed_at', 'is', null).order('closed_at', { ascending: false }).limit(1).maybeSingle()
+    : { data: null };
   let expected = 0;
   let txs: { id: number; direction: string; category: string; amount: number; note: string | null; created_at: string }[] = [];
   if (session && canCash) {
@@ -43,6 +48,13 @@ export default async function CashierPage() {
     <>
       <PageHeader title="Caisse" description={session ? `Caisse ouverte depuis ${formatDateTime(session.opened_at)}` : 'Caisse fermée'}
         actions={canCash ? <ButtonLink href="/admin/caisse/sessions" size="sm" variant="outline"><History className="size-4" /> Clôtures</ButtonLink> : undefined} />
+      {!session && canCash && lastClosed && (
+        <Alert tone={lastClosed.difference === 0 ? 'success' : 'warning'} className="mb-4 max-w-2xl">
+          Dernière clôture le {formatDateTime(lastClosed.closed_at!)} : espèces attendues <strong>{formatXOF(lastClosed.expected_cash ?? 0)}</strong>,
+          comptées <strong>{formatXOF(lastClosed.counted_cash ?? 0)}</strong>, écart <strong>{(lastClosed.difference ?? 0) > 0 ? '+' : ''}{formatXOF(lastClosed.difference ?? 0)}</strong>.{' '}
+          <Link href="/admin/caisse/sessions" className="font-semibold underline">Voir les clôtures</Link>
+        </Alert>
+      )}
       {!session && canCash && <Panel title="Ouvrir la caisse" className="mb-6 max-w-md"><OpenCashForm /></Panel>}
       {!session && !canCash && <p className="mb-6 rounded-2xl bg-powder-50 p-4 text-sm text-ink-soft">La caisse est fermée : seuls les paiements Wave, Orange Money, carte ou virement peuvent être enregistrés. Demandez à une responsable de l&apos;ouvrir pour les espèces.</p>}
       <Pos products={products} services={posServices} canDiscount={ctx.can('pos.discount')} cashOpen={Boolean(session)} />

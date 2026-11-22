@@ -43,6 +43,8 @@ export function BookingWizard({ categories, settings, initialService }: { catego
   const [date, setDate] = useState('');
   const [weekOffset, setWeekOffset] = useState(0);
   const [slots, setSlots] = useState<Slot[] | null>(null);
+  // Incrémenté quand un créneau vient d'être pris : force le rechargement des disponibilités.
+  const [slotsVersion, setSlotsVersion] = useState(0);
   const [slot, setSlot] = useState<Slot | null>(null);
   const [contact, setContact] = useState({ fullName: '', phone: '', email: '', notes: '' });
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | ''>('');
@@ -76,7 +78,7 @@ export function BookingWizard({ categories, settings, initialService }: { catego
       if (r.ok) setSlots(r.data); else { setSlots([]); setError(r.error); }
     });
     return () => { cancelled = true; };
-  }, [serviceId, date, employeeId]);
+  }, [serviceId, date, employeeId, slotsVersion]);
 
   const go = (n: number) => { setError(null); setStep(n); window.scrollTo({ top: 0, behavior: 'smooth' }); };
 
@@ -100,9 +102,13 @@ export function BookingWizard({ categories, settings, initialService }: { catego
         paymentMethod: paymentMethod || undefined, marketingConsent, acceptTerms,
       });
       if (r.ok) { setResult(r.data); setStep(9); window.scrollTo({ top: 0 }); return; }
+      if (r.error.includes('créneau')) {
+        // Créneau pris entre-temps : retour au choix de l'heure avec des disponibilités à jour.
+        // go() efface l'erreur, elle est donc posée après.
+        setSlot(null); go(5); setSlotsVersion((v) => v + 1);
+      }
       setError(r.error);
       if (r.fields) setErrors(r.fields);
-      if (r.error.includes('créneau')) { setSlot(null); setDate(date); go(5); }
     });
   }
 
