@@ -63,6 +63,15 @@ stocks, statistiques et rôles.
 - **Wave (paiement en ligne) :** l'adaptateur `src/lib/payments/wave.ts` a été écrit d'après la documentation publique connue, **sans pouvoir la consulter** (docs.wave.com était inaccessible depuis l'environnement de développement). Il faut le valider avec un compte Wave Business en test avant toute ouverture aux clientes. Tant que les clés sont absentes, aucun paiement en ligne n'est proposé.
 - **Orange Money en ligne :** pas encore implémenté. Il faut le contrat marchand et la documentation de l'API.
 - **WhatsApp Business Platform :** l'adaptateur est prêt, mais il faut un compte Meta, un numéro vérifié et des modèles de messages approuvés. En attendant, l'équipe envoie les messages via des liens WhatsApp pré-remplis, tracés dans le journal des messages.
-- **Codes promo et cartes cadeaux :** ils sont enregistrés et suivis, mais **pas encore appliqués automatiquement** en caisse ni dans la boutique.
+- **Codes promo sur la réservation en ligne :** les codes s'appliquent dans la boutique et en caisse, pas encore à l'acompte d'une réservation en ligne.
 - **Mentions légales :** NINEA, RCCM, responsable de publication et durées de conservation sont à compléter (signalés « à compléter » sur le site).
-- **Tests de bout en bout de l'administration :** la logique métier et les permissions sont testées directement en base (suites SQL : réservations, double réservation concurrente, stocks, paiements, caisse, RLS par rôle). En revanche, les écrans de l'admin et les parcours connectés (réservation complète dans le navigateur, upload d'images, invitations) n'ont pas pu être exécutés contre un vrai projet Supabase dans l'environnement de développement. Ils sont vérifiés par TypeScript strict, le lint et le build. Une recette manuelle sur l'environnement de staging est nécessaire avant la production (voir DEPLOYMENT.md).
+- **Recette sur le projet Supabase (22/11/2026) :**
+  - les 13 migrations sont appliquées ;
+  - les 8 suites de tests SQL passent sur la vraie base, dans des transactions annulées ;
+  - un parcours navigateur complet a été validé contre la vraie base : commande en ligne avec code promo, connexion équipe, vente d'une carte cadeau, vente en caisse avec code promo payée par carte cadeau, encaissement d'une commande par carte cadeau, registre Fidélité. Les données de test ont été supprimées ensuite ;
+  - deuxième parcours validé contre la vraie base :
+    - réservation en ligne complète (10 étapes, acompte de 30 %) ;
+    - deux réservations simultanées du même créneau : une seule est acceptée ;
+    - ouverture de caisse, acompte en espèces, démarrage puis fin du rendez-vous, solde par Wave ;
+    - vente en espèces, retrait, clôture avec écart (27 500 attendus, 27 000 comptés, −500) ;
+  - **restent à vérifier à la main :** l'envoi d'images (galerie, devis) et les invitations par email (SMTP).

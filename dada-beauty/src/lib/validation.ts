@@ -44,6 +44,9 @@ export const slotsQuerySchema = z.object({
   employeeId: z.uuid().optional(),
 });
 
+/** Code promo saisi par la cliente ou l'équipe (normalisé en majuscules, comme en base). */
+export const promoCodeSchema = z.string().trim().toUpperCase().regex(/^[A-Z0-9_-]{3,30}$/, 'Code promo invalide');
+
 export const cartItemSchema = z.object({ variantId: z.uuid(), quantity: z.number().int().min(1).max(20) });
 
 export const orderSchema = z
@@ -57,6 +60,7 @@ export const orderSchema = z
     deliveryNotes: z.string().trim().max(500).optional(),
     paymentMethod: paymentMethodSchema.optional(),
     marketingConsent: z.boolean().default(false),
+    promotionCode: promoCodeSchema.optional(),
   })
   .refine((o) => o.fulfillment !== 'delivery' || (o.deliveryAddress?.length ?? 0) >= 5, {
     message: 'Adresse de livraison requise',

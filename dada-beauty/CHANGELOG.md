@@ -2,6 +2,42 @@
 
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Versionnage sémantique.
 
+## [0.3.0] — 2026-11-22
+
+### Ajouté
+- **Vidéos TikTok dans la galerie.**
+  - Dans Admin → Galerie & médias → « Vidéos TikTok », l'équipe colle le lien d'une vidéo et choisit un titre, une catégorie, un ordre et la publication.
+  - Le site affiche une section « En vidéo » qui suit les filtres de la galerie.
+  - La lecture passe par le lecteur officiel TikTok, chargé seulement au clic : aucun script ni cookie TikTok avant que la visiteuse lance la vidéo.
+  - Aucune vidéo n'est copiée ni hébergée.
+- Les liens courts de l'application (vm.tiktok.com…) sont résolus côté serveur, sans jamais quitter les domaines TikTok.
+- Migration `20261122000100_social_videos.sql`, tests SQL `26_social_videos.sql`, tests unitaires `tiktok.test.ts`.
+
+### Corrigé
+- **Admin → Galerie, Devis et Statistiques :** des constantes (catégories de médias, statuts de devis, couleurs des graphiques) étaient importées côté serveur depuis des modules client. La page Galerie plantait, et les libellés pouvaient être vides. Ces constantes sont déplacées dans `src/lib/media.ts` et `src/lib/chart-colors.ts`, et un test (`client-boundary.test.ts`) bloque toute récidive.
+
+## [0.2.0] — 2026-11-22
+
+### Ajouté
+- **Codes promo appliqués automatiquement** dans la boutique en ligne (champ « Code promo » du panier) et en caisse.
+  - La remise est recalculée par la base sur les prix réels. Elle respecte la période, le minimum d'achat, le périmètre (prestations ou produits) et le nombre maximum d'utilisations.
+  - Une utilisation est rendue si la commande est annulée ou remboursée.
+  - Les frais de livraison ne sont pas remisés.
+- **Cartes cadeaux utilisables comme moyen de paiement**, en caisse (paiement fractionné possible) et à l'encaissement d'un rendez-vous ou d'une commande.
+  - Le solde est vérifié et débité de façon atomique.
+  - Un remboursement recrédite la carte.
+- **Vente de cartes cadeaux** depuis la Caisse ou le menu Fidélité. Une carte vendue en espèces entre dans la caisse. Une carte offerte exige un motif et la permission Fidélité.
+- Registre immuable des mouvements de carte cadeau (`gift_card_transactions`). Il est affiché dans le menu Fidélité.
+- Migration `20261121001400_promotions_gift_cards.sql` et suite de tests SQL `25_promotions_gift_cards.sql`.
+
+### Corrigé (trouvé pendant la recette sur Supabase)
+- Réservation : quand le créneau était pris par une autre cliente au même moment, la cliente refusée revenait au choix de l'heure **sans message**, et le créneau restait affiché. Le message s'affiche maintenant, et les disponibilités sont rechargées.
+- Caisse : après la clôture, le récapitulatif (attendu, compté, écart) disparaissait aussitôt. La page affiche désormais la dernière clôture et son écart.
+
+### Sécurité
+- Le solde d'une carte cadeau et le compteur d'utilisations d'un code ne sont plus modifiables directement : privilèges par colonne et trigger de garde.
+- L'aperçu public d'un code promo est limité à 20 essais par heure et par client.
+
 ## [0.1.0] — 2026-11-21
 
 ### Ajouté
@@ -37,5 +73,5 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 - Wave : l'adaptateur n'a pas été vérifié contre la documentation officielle (inaccessible pendant le développement). Il faut le tester en staging.
 - Orange Money en ligne : non implémenté (contrat marchand requis).
 - WhatsApp Cloud API : nécessite un compte Meta et des modèles approuvés.
-- Codes promo et cartes cadeaux : non appliqués automatiquement en caisse ni en ligne.
+- Codes promo et cartes cadeaux : non appliqués automatiquement en caisse ni en ligne (corrigé en 0.2.0).
 - Photos, tarifs, durées, horaires et mentions légales (NINEA, RCCM) à fournir par Dada Beauty.

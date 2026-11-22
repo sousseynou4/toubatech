@@ -87,9 +87,11 @@ export function PaymentForm({ appointmentId, orderId, remaining, depositDue, cas
         </Select></Field>
       </div>
       <Field label="Moyen de paiement" htmlFor="p-method"><Select id="p-method" name="method" value={method} onChange={(e) => setMethod(e.target.value)}>
-        <option value="cash">Espèces</option><option value="wave">Wave (reçu et vérifié)</option><option value="orange_money">Orange Money (reçu et vérifié)</option><option value="card">Carte</option><option value="bank_transfer">Virement</option><option value="other">Autre</option>
+        <option value="cash">Espèces</option><option value="wave">Wave (reçu et vérifié)</option><option value="orange_money">Orange Money (reçu et vérifié)</option><option value="card">Carte</option><option value="bank_transfer">Virement</option><option value="gift_card">Carte cadeau</option><option value="other">Autre</option>
       </Select></Field>
-      {method !== 'cash' && <Field label="Référence de transaction" htmlFor="p-ref" hint="Numéro de transaction visible dans l'application Wave / Orange Money"><Input id="p-ref" name="providerReference" maxLength={120} /></Field>}
+      {method === 'gift_card'
+        ? <Field label="Code de la carte cadeau" htmlFor="p-ref" hint="Le solde est vérifié et débité automatiquement."><Input id="p-ref" name="providerReference" maxLength={20} required className="font-mono uppercase" autoComplete="off" /></Field>
+        : method !== 'cash' && <Field label="Référence de transaction" htmlFor="p-ref" hint="Numéro de transaction visible dans l'application Wave / Orange Money"><Input id="p-ref" name="providerReference" maxLength={120} /></Field>}
       {method === 'cash' && !cashOpen && <Alert tone="warning">La caisse est fermée : ouvrez-la dans le module Caisse pour encaisser des espèces.</Alert>}
       <Field label="Note (facultatif)" htmlFor="p-note"><Input id="p-note" name="note" maxLength={500} /></Field>
       <p className="text-xs text-muted">Reste dû : {new Intl.NumberFormat('fr-FR').format(remaining)} FCFA</p>

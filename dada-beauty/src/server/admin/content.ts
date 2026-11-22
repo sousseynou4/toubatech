@@ -6,6 +6,7 @@ import { assertPermission } from '@/lib/auth';
 import { dbErrorMessage } from '@/lib/errors';
 import type { ServerSupabase } from '@/lib/supabase/server';
 import type { FormState } from './common';
+import { isShortTikTokLink, isTikTokHost, parseTikTokUrl } from '@/lib/tiktok';
 
 async function guard(perm: string) {
   try { return await assertPermission(perm); } catch { return null; }
@@ -178,5 +179,80 @@ export async function deleteReview(id: string): Promise<FormState> {
   if (error) return { error: dbErrorMessage(error) };
   revalidatePath('/admin/avis');
   revalidatePath('/');
+  return { ok: true };
+}
+
+// ─── Vidéos TikTok (lecteur officiel intégré, aucune copie hébergée) ──────────
+
+/** Suit la redirection d'un lien court TikTok (vm.tiktok.com…) sans jamais quitter les domaines TikTok. */
+async function resolveTikTokShortLink(link: string): Promise<string | null> {
+  let current = /^https?:\/\//i.test(link.trim()) ? link.trim() : `https://${link.trim()}`;
+  for (let hop = 0; hop < 4; hop++) {
+    if (parseTikTokUrl(current)) return current;
+    let res: Response;
+    try {
+      res = await fetch(current, { method: 'GET', redirect: 'manual', signal: AbortSignal.timeout(5000), headers: { 'user-agent': 'Mozilla/5.0 (compatible; DadaBeautySite/1.0)' } });
+    } catch { return null; }
+    const location = res.headers.get('location');
+    if (!location) return null;
+    const next = new URL(location, current);
+    if (next.protocol !== 'https:' || !isTikTokHost(next.hostname)) return null;
+    current = next.toString();
+  }
+  return parseTikTokUrl(current) ? current : null;
+}
+
+const videoMetaSchema = z.object({
+  title: z.string().trim().max(150).nullable(),
+  category: z.enum(CATEGORIES).nullable(),
+  sort_order: z.coerce.number().int().min(-1000).max(1000).default(0),
+  is_published: z.boolean(),
+});
+const optText = (v: FormDataEntryValue | null) => { const s = String(v ?? '').trim(); return s === '' ? null : s; };
+
+export async function addTikTokVideo(_p: FormState, form: FormData): Promise<FormState> {
+  const g = await guard('gallery.manage'); if (!g) return DENIED;
+  const link = String(form.get('url') ?? '').trim();
+  if (!link) return { error: 'Collez le lien de la vidéo TikTok.' };
+  let parsed = parseTikTokUrl(link);
+  if (!parsed && isShortTikTokLink(link)) {
+    const resolved = await resolveTikTokShortLink(link);
+    parsed = resolved ? parseTikTokUrl(resolved) : null;
+    if (!parsed) return { error: 'Lien court TikTok impossible à ouvrir. Sur TikTok, ouvrez la vidéo dans un navigateur et copiez l\'adresse complète (…tiktok.com/@compte/video/…).' };
+  }
+  if (!parsed) return { error: 'Ce lien ne correspond pas à une vidéo TikTok (format attendu : https://www.tiktok.com/@compte/video/…).' };
+  const meta = videoMetaSchema.safeParse({
+    title: optText(form.get('title')), category: optText(form.get('category')), sort_order: form.get('sort_order') || 0,
+    is_published: form.get('is_published') === 'on',
+  });
+  if (!meta.success) return { error: meta.error.issues[0]?.message ?? 'Formulaire invalide.' };
+  const { error } = await g.supabase.from('social_videos').insert({
+    platform: 'tiktok', video_id: parsed.videoId, url: parsed.url, author_handle: parsed.handle, ...meta.data, created_by: g.ctx.userId,
+  });
+  if (error) return { error: error.message.includes('duplicate key') ? 'Cette vidéo est déjà dans la galerie.' : dbErrorMessage(error) };
+  revalidatePublic();
+  return { ok: true, message: 'Vidéo ajoutée à la galerie.' };
+}
+
+export async function updateTikTokVideo(_p: FormState, form: FormData): Promise<FormState> {
+  const g = await guard('gallery.manage'); if (!g) return DENIED;
+  const id = z.uuid().safeParse(form.get('id'));
+  const meta = videoMetaSchema.safeParse({
+    title: optText(form.get('title')), category: optText(form.get('category')), sort_order: form.get('sort_order') || 0,
+    is_published: form.get('is_published') === 'on',
+  });
+  if (!id.success || !meta.success) return { error: 'Formulaire invalide.' };
+  const { error } = await g.supabase.from('social_videos').update(meta.data).eq('id', id.data);
+  if (error) return { error: dbErrorMessage(error) };
+  revalidatePublic();
+  return { ok: true, message: 'Vidéo mise à jour.' };
+}
+
+export async function deleteTikTokVideo(id: string): Promise<FormState> {
+  const g = await guard('gallery.manage'); if (!g) return DENIED;
+  if (!z.uuid().safeParse(id).success) return { error: 'Requête invalide.' };
+  const { error } = await g.supabase.from('social_videos').delete().eq('id', id);
+  if (error) return { error: dbErrorMessage(error) };
+  revalidatePublic();
   return { ok: true };
 }

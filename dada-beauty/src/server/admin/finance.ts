@@ -2,7 +2,9 @@
 
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-import { assertPermission } from '@/lib/auth';
+import { assertPermission, getStaffContext } from '@/lib/auth';
+import { createClient } from '@/lib/supabase/server';
+import { promoCodeSchema } from '@/lib/validation';
 import { dbErrorMessage } from '@/lib/errors';
 import type { FormState } from './common';
 
@@ -57,8 +59,10 @@ const lineSchema = z.discriminatedUnion('type', [
 const checkoutSchema = z.object({
   customerId: z.uuid().nullable(),
   lines: z.array(lineSchema).min(1, 'Ajoutez au moins un article').max(50),
-  payments: z.array(z.object({ method: z.enum(['cash', 'wave', 'orange_money', 'card', 'bank_transfer', 'other']), amount: z.number().int().positive('Montant de paiement invalide'), reference: z.string().max(120).optional() })).min(1, 'Ajoutez un paiement').max(5),
+  payments: z.array(z.object({ method: z.enum(['cash', 'wave', 'orange_money', 'card', 'bank_transfer', 'gift_card', 'other']), amount: z.number().int().positive('Montant de paiement invalide'), reference: z.string().trim().max(120).optional() })
+    .refine((p) => p.method !== 'gift_card' || Boolean(p.reference), { message: 'Indiquez le code de la carte cadeau.' })).max(6),
   discount: z.number().int().min(0).default(0),
+  promotionCode: promoCodeSchema.optional(),
   note: z.string().max(500).optional(),
   idempotencyKey: z.uuid(),
 });
@@ -73,7 +77,7 @@ export async function posCheckout(input: PosCheckoutInput): Promise<{ ok?: boole
   const d = parsed.data;
   const { data, error } = await g.supabase.rpc('pos_checkout', {
     p_customer_id: d.customerId, p_lines: d.lines, p_payments: d.payments.map((p) => ({ method: p.method, amount: p.amount, reference: p.reference ?? '' })),
-    p_discount: d.discount, p_note: d.note ?? null, p_idempotency_key: d.idempotencyKey,
+    p_discount: d.discount, p_note: d.note ?? null, p_idempotency_key: d.idempotencyKey, p_promotion_code: d.promotionCode ?? null,
   });
   if (error) return { error: dbErrorMessage(error) };
   const r = data as { reference: string; total_amount: number };
@@ -118,4 +122,35 @@ export async function recordExpense(_p: FormState, form: FormData): Promise<Form
   revalidatePath('/admin/depenses');
   revalidatePath('/admin/caisse', 'layout');
   return { ok: true, message: 'Dépense enregistrée.' };
+}
+
+export interface GiftCardInfo { code: string; balance: number; initial_amount: number; recipient_name: string | null; expires_on: string | null; is_active: boolean; usable: boolean }
+
+/** Consultation du solde d'une carte cadeau (caisse, encaissement, fidélité ; la base vérifie la permission). */
+export async function lookupGiftCard(code: string): Promise<{ ok?: boolean; error?: string; card?: GiftCardInfo }> {
+  const ctx = await getStaffContext();
+  if (!ctx || !(ctx.can('pos.use') || ctx.can('payments.manage') || ctx.can('loyalty.manage'))) return { error: dbErrorMessage('PERMISSION_DENIED') };
+  const clean = code.trim().toUpperCase();
+  if (!/^[A-Z0-9]{4,20}$/.test(clean)) return { error: dbErrorMessage('GIFT_CARD_NOT_FOUND') };
+  const sb = (await createClient())!;
+  const { data, error } = await sb.rpc('gift_card_lookup', { p_code: clean });
+  if (error) return { error: dbErrorMessage(error) };
+  if (!data) return { error: dbErrorMessage('GIFT_CARD_NOT_FOUND') };
+  return { ok: true, card: data as GiftCardInfo };
+}
+
+/** Aperçu d'un code promo en caisse (calcul en base sur les prix réels, sans consommer le code). */
+export async function previewPosPromotion(input: { code: string; lines: PosCheckoutInput['lines'] }): Promise<{ ok?: boolean; error?: string; discount?: number; code?: string }> {
+  const g = await guard('pos.use');
+  if (!g) return { error: dbErrorMessage('PERMISSION_DENIED') };
+  const parsed = z.object({ code: promoCodeSchema, lines: z.array(lineSchema).min(1).max(50) }).safeParse(input);
+  if (!parsed.success) return { error: dbErrorMessage('PROMO_INVALID') };
+  const { data, error } = await g.supabase.rpc('pos_preview_promotion', { p_code: parsed.data.code, p_lines: parsed.data.lines });
+  if (error) return { error: dbErrorMessage(error) };
+  const r = data as { ok: boolean; reason?: string; discount?: number; code?: string; min_amount?: number };
+  if (!r.ok) {
+    const msg = dbErrorMessage(r.reason ?? 'PROMO_INVALID');
+    return { error: r.reason === 'PROMO_MIN_AMOUNT' && r.min_amount ? `${msg} (minimum : ${new Intl.NumberFormat('fr-FR').format(r.min_amount)} FCFA)` : msg };
+  }
+  return { ok: true, discount: r.discount ?? 0, code: r.code };
 }

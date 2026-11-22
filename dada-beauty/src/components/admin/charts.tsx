@@ -4,7 +4,7 @@ import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAx
 import { formatXOF } from '@/lib/format';
 
 /** Palette catégorielle validée (contraste, daltonisme) — ordre fixe, jamais recyclé. */
-export const SERIES = ['#B04E72', '#B08A2E', '#3D72B8', '#2E8C62', '#8A55B8', '#D0643A'] as const;
+import { SERIES } from '@/lib/chart-colors';
 const AXIS = { fontSize: 11, fill: '#81747A' };
 const compact = new Intl.NumberFormat('fr-FR', { notation: 'compact', maximumFractionDigits: 1 });
 

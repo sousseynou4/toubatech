@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bookingSchema, orderSchema, quoteSchema } from '@/lib/validation';
+import { bookingSchema, orderSchema, promoCodeSchema, quoteSchema } from '@/lib/validation';
 
 const base = {
   serviceId: '3f0c1a5e-6f1b-4b47-9d7e-2b2f1c0a9a11', start: '2026-12-01T10:00:00.000Z', fullName: 'Fatou Diop', phone: '77 111 22 33',
@@ -33,5 +33,14 @@ describe('validation', () => {
   it('valide une demande de devis', () => {
     expect(quoteSchema.safeParse({ fullName: 'Awa', phone: '771112233', eventType: 'mariage', eventDate: '2027-02-14', eventLocation: 'Dakar', peopleCount: '4' }).success).toBe(true);
     expect(quoteSchema.safeParse({ fullName: 'Awa', phone: '771112233', eventType: 'fête', eventDate: '2027-02-14', eventLocation: 'Dakar', peopleCount: '4' }).success).toBe(false);
+  });
+  it('normalise un code promo et refuse les caractères invalides', () => {
+    expect(promoCodeSchema.parse('  tabaski2027 ')).toBe('TABASKI2027');
+    expect(promoCodeSchema.safeParse('AB').success).toBe(false);
+    expect(promoCodeSchema.safeParse("PROMO'; --").success).toBe(false);
+    const order = { items: [{ variantId: '3f0c1a5e-6f1b-4b47-9d7e-2b2f1c0a9a11', quantity: 1 }], fullName: 'Awa', phone: '771112233', fulfillment: 'pickup' };
+    const r = orderSchema.safeParse({ ...order, promotionCode: 'bienvenue10' });
+    expect(r.success && r.data.promotionCode).toBe('BIENVENUE10');
+    expect(orderSchema.safeParse(order).success).toBe(true);
   });
 });

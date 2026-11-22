@@ -2,7 +2,8 @@
 
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-import { assertPermission } from '@/lib/auth';
+import { assertPermission, getStaffContext } from '@/lib/auth';
+import { createClient } from '@/lib/supabase/server';
 import { dbErrorMessage } from '@/lib/errors';
 import type { FormState } from './common';
 
@@ -68,20 +69,33 @@ export async function deletePromotion(id: string): Promise<FormState> {
   return { ok: true };
 }
 
+/** Émission d'une carte cadeau : vendue (caisse, permission pos.use) ou offerte (loyalty.manage, motif obligatoire). */
 export async function createGiftCard(_p: FormState, form: FormData): Promise<FormState> {
-  const g = await guard(); if (!g) return denied;
+  const ctx = await getStaffContext();
+  if (!ctx || !(ctx.can('loyalty.manage') || ctx.can('pos.use'))) return denied;
   const parsed = z.object({
     amount: z.coerce.number().int().min(1000, 'Montant minimum : 1 000 FCFA').max(10_000_000),
     recipient_name: z.string().max(120).nullable(), expires_on: z.iso.date().nullable(),
-  }).safeParse({ amount: form.get('amount'), recipient_name: opt(form.get('recipient_name')), expires_on: opt(form.get('expires_on')) });
+    sale_method: z.enum(['cash', 'wave', 'orange_money', 'card', 'bank_transfer', 'other', 'offered']),
+    sale_reference: z.string().max(120).nullable(), note: z.string().max(500).nullable(),
+    purchaser_customer_id: z.uuid().nullable(),
+  }).refine((d) => d.sale_method !== 'offered' || (d.note?.trim().length ?? 0) >= 3, { message: 'Indiquez le motif de la carte offerte.' })
+    .safeParse({
+      amount: form.get('amount'), recipient_name: opt(form.get('recipient_name')), expires_on: opt(form.get('expires_on')),
+      sale_method: form.get('sale_method') ?? 'cash', sale_reference: opt(form.get('sale_reference')), note: opt(form.get('note')),
+      purchaser_customer_id: opt(form.get('customerId')),
+    });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Formulaire invalide.' };
-  const { data, error } = await g.supabase.from('gift_cards').insert({
-    initial_amount: parsed.data.amount, balance: parsed.data.amount, recipient_name: parsed.data.recipient_name,
-    expires_on: parsed.data.expires_on, created_by: g.ctx.userId,
-  }).select('code').single();
+  const d = parsed.data;
+  const supabase = (await createClient())!;
+  const { data, error } = await supabase.rpc('issue_gift_card', {
+    p_amount: d.amount, p_recipient_name: d.recipient_name, p_expires_on: d.expires_on, p_purchaser_customer_id: d.purchaser_customer_id,
+    p_sale_method: d.sale_method === 'offered' ? null : d.sale_method, p_sale_reference: d.sale_reference, p_note: d.note,
+  });
   if (error) return { error: dbErrorMessage(error) };
   revalidatePath('/admin/fidelite');
-  return { ok: true, message: `Carte cadeau créée : ${data.code}` };
+  revalidatePath('/admin/caisse', 'layout');
+  return { ok: true, message: `Carte cadeau créée : ${(data as { code: string }).code}` };
 }
 
 export async function setGiftCardActive(id: string, active: boolean): Promise<FormState> {

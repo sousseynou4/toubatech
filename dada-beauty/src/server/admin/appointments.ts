@@ -52,10 +52,10 @@ export async function saveAppointmentNotes(_p: FormState, form: FormData): Promi
 const paymentSchema = z.object({
   appointmentId: z.uuid().optional(), orderId: z.uuid().optional(),
   amount: z.coerce.number().int().positive('Montant invalide'),
-  method: z.enum(['cash', 'wave', 'orange_money', 'card', 'bank_transfer', 'other']),
+  method: z.enum(['cash', 'wave', 'orange_money', 'card', 'bank_transfer', 'gift_card', 'other']),
   kind: z.enum(['deposit', 'balance', 'full']),
-  providerReference: z.string().max(120).optional(), note: z.string().max(500).optional(), idempotencyKey: z.uuid(),
-});
+  providerReference: z.string().trim().max(120).optional(), note: z.string().max(500).optional(), idempotencyKey: z.uuid(),
+}).refine((d) => d.method !== 'gift_card' || Boolean(d.providerReference), { message: 'Indiquez le code de la carte cadeau.' });
 
 /** Paiement enregistré par l'équipe (espèces ou transfert reçu et vérifié). */
 export async function recordPayment(_p: FormState, form: FormData): Promise<FormState> {
