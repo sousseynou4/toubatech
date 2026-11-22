@@ -1,0 +1,81 @@
+name: Dada Beauty — CI
+
+on:
+  push:
+    paths: ['dada-beauty/**', '.github/workflows/dada-beauty-ci.yml']
+  pull_request:
+    paths: ['dada-beauty/**', '.github/workflows/dada-beauty-ci.yml']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dada-beauty-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: dada-beauty
+
+jobs:
+  checks:
+    name: Typecheck, lint, tests unitaires, build
+    runs-on: ubuntu-latest
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
+      # Valeurs factices : le build ne contacte pas Supabase.
+      NEXT_PUBLIC_SITE_URL: https://ci.example.invalid
+      NEXT_PUBLIC_SUPABASE_URL: ''
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ''
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: dada-beauty/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+      - name: Tests E2E (Playwright)
+        run: |
+          npx playwright install --with-deps chromium
+          npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: dada-beauty/playwright-report
+          retention-days: 7
+
+  database:
+    name: Migrations & tests SQL (PostgreSQL 16)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      PGHOST: localhost
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+      - name: Client PostgreSQL
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client
+      - name: Migrations + tests de la base (RLS, réservations concurrentes, stocks, paiements)
+        run: bash scripts/db-test.sh
+      - name: Seed de démonstration sur base jetable
+        run: |
+          psql -v ON_ERROR_STOP=1 -q -d postgres -c "create database dada_demo_ci"
+          psql -v ON_ERROR_STOP=1 -q -d dada_demo_ci -f supabase/tests/00_local_supabase_stub.sql
+          for f in supabase/migrations/*.sql; do psql -v ON_ERROR_STOP=1 -q -d dada_demo_ci -f "$f"; done
+          psql -v ON_ERROR_STOP=1 -q -d dada_demo_ci -f supabase/seed.sql
+          psql -v ON_ERROR_STOP=1 -q -d dada_demo_ci -c "select set_config('dada.allow_demo','on',false)" -f supabase/demo/seed_demo.sql
