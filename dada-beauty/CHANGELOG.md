@@ -2,6 +2,13 @@
 
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Versionnage sémantique.
 
+## [0.6.1] — 2026-11-24
+
+### Amélioré
+- **Vidéos TikTok plus fluides à l'ouverture.** Le lecteur de TikTok télécharge environ 1,6 Mo (scripts et polices) avant même la vidéo ; sur mobile, l'attente se voyait comme un cadre noir.
+  - Un indicateur « Chargement depuis TikTok… » s'affiche jusqu'à ce que le lecteur soit prêt.
+  - Une seule vidéo est ouverte à la fois : en lancer une ferme la précédente, qui cesse de se télécharger et de partager la connexion.
+
 ## [0.6.0] — 2026-11-24
 
 ### Ajouté

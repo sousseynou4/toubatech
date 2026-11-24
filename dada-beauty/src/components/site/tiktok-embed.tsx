@@ -1,32 +1,64 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Play } from 'lucide-react';
+import { Loader2, Play } from 'lucide-react';
 import { tiktokPlayerUrl, tiktokProfileEmbedUrl } from '@/lib/tiktok';
 import { cn } from '@/lib/cn';
+
+/** Événement émis quand une vidéo démarre : les autres lecteurs de la page se ferment. */
+const PLAY_EVENT = 'dada:tiktok-play';
 
 /**
  * Vidéo TikTok en « chargement au clic » : aucun script ni cookie TikTok n'est chargé
  * tant que la visiteuse n'a pas choisi de lancer la vidéo (vie privée et rapidité de la page).
+ *
+ * Le lecteur de TikTok pèse environ 1,6 Mo (scripts et polices) avant la vidéo elle-même : on affiche
+ * un indicateur pendant ce chargement, et une seule vidéo est ouverte à la fois pour ne pas partager
+ * une connexion mobile entre plusieurs lecteurs.
  */
 export function TikTokEmbed({ videoId, title, url, className }: { videoId: string; title: string | null; url: string; className?: string }) {
   const [active, setActive] = useState(false);
+  const [loaded, setLoaded] = useState(false);
   const label = title ?? 'Vidéo TikTok de Dada Beauty';
+  useEffect(() => {
+    if (!active) return;
+    const onPlay = (e: Event) => {
+      if ((e as CustomEvent<string>).detail === videoId) return;
+      setActive(false);
+      setLoaded(false);
+    };
+    window.addEventListener(PLAY_EVENT, onPlay);
+    return () => window.removeEventListener(PLAY_EVENT, onPlay);
+  }, [active, videoId]);
+  const start = () => {
+    window.dispatchEvent(new CustomEvent(PLAY_EVENT, { detail: videoId }));
+    setActive(true);
+  };
   return (
     <figure className={cn('break-inside-avoid', className)}>
       <div className="relative aspect-[9/16] overflow-hidden rounded-2xl bg-ink">
         {active ? (
-          <iframe
-            src={`${tiktokPlayerUrl(videoId)}&autoplay=1`}
-            title={label}
-            className="absolute inset-0 size-full border-0"
-            allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
-            allowFullScreen
-            referrerPolicy="strict-origin-when-cross-origin"
-            sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-presentation"
-          />
+          <>
+            <iframe
+              src={`${tiktokPlayerUrl(videoId)}&autoplay=1`}
+              title={label}
+              className="absolute inset-0 size-full border-0"
+              allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+              allowFullScreen
+              referrerPolicy="strict-origin-when-cross-origin"
+              sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-presentation"
+              onLoad={() => setLoaded(true)}
+            />
+            {!loaded && (
+              <div role="status" className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-ink via-[#3a2531] to-rosewood p-4 text-center text-ivory">
+                <Loader2 className="size-8 animate-spin" aria-hidden />
+                <span className="text-sm font-medium">Chargement depuis TikTok…</span>
+                <span className="text-[0.7rem] text-ivory/70">Quelques secondes selon votre connexion</span>
+              </div>
+            )}
+          </>
         ) : (
-          <button type="button" onClick={() => setActive(true)}
+          <button type="button" onClick={start}
             className="group absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-br from-ink via-[#3a2531] to-rosewood p-4 text-center text-ivory">
             <span className="grid size-16 place-items-center rounded-full bg-ivory/15 ring-1 ring-ivory/40 transition group-hover:scale-105 group-hover:bg-ivory/25">
               <Play className="ml-1 size-7 fill-current" aria-hidden />
