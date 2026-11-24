@@ -2,6 +2,30 @@
 
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Versionnage sémantique.
 
+## [0.5.0] — 2026-11-24
+
+### Corrigé (trouvé en recette sur le projet Supabase)
+- **Envoi de photos.** Toute photo de plus de 1 Mo était refusée par le serveur (« Body exceeded 1 MB limit »), soit la plupart des photos de téléphone. Le bouton tournait puis une page d'erreur s'affichait. Cela touchait :
+  - la galerie ;
+  - les photos de prestation, de catégorie et de produit ;
+  - les photos d'inspiration des devis.
+
+  Désormais :
+  - les photos sont allégées dans le navigateur avant l'envoi (2048 px au plus, WebP ou JPEG), ce qui retire aussi la position GPS du téléphone ;
+  - la galerie envoie les grosses séries en plusieurs fois ;
+  - la limite d'une requête passe à 4 Mo, sous le plafond de 4,5 Mo de Vercel ;
+  - un envoi qui échoue affiche un message au lieu d'une page d'erreur.
+- **Invitations de l'équipe.** Le lien reçu menait à « lien invalide » : Supabase place la session dans le fragment `#access_token`, que le serveur ne voit pas. La page de confirmation transmet maintenant ce fragment à la page « nouveau mot de passe ».
+
+### Ajouté
+- **Invitation par lien à transmettre** (menu Équipe → comptes) :
+  - le lien, à usage unique et valable 1 heure, pointe vers le site ;
+  - un bouton l'envoie sur WhatsApp, un autre le copie ;
+  - cela marche sans service d'envoi d'emails ;
+  - le script `create-owner.mjs --link` produit le même format de lien.
+- Modèles d'emails en français (invitation, réinitialisation) dans `supabase/templates/`. Supabase n'accepte de les appliquer qu'une fois le SMTP configuré : voir DEPLOYMENT.md.
+- Tests unitaires `image-prep.test.ts` et `auth-links.test.ts`.
+
 ## [0.4.0] — 2026-11-22
 
 ### Ajouté

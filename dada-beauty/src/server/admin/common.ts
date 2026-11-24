@@ -23,7 +23,8 @@ export async function markNotificationsRead(ids: string[]) {
   revalidatePath('/admin', 'layout');
 }
 
-export type FormState = { ok?: boolean; error?: string; message?: string; fields?: Record<string, string> } | null;
+/** `link` : lien à usage unique à transmettre (invitation d'un membre de l'équipe par WhatsApp). */
+export type FormState = { ok?: boolean; error?: string; message?: string; fields?: Record<string, string>; link?: string } | null;
 
 /** Exécute une opération Supabase et renvoie un état de formulaire uniforme. */
 export async function toState(p: PromiseLike<{ error: unknown }>, success = 'Enregistré.'): Promise<FormState> {

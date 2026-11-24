@@ -8,6 +8,7 @@ import { dbErrorMessage } from '@/lib/errors';
 import { dakarLocalToISO } from '@/lib/format';
 import { env } from '@/lib/env';
 import { createServiceClient } from '@/lib/supabase/admin';
+import { accessLink, PASSWORD_PAGE } from '@/lib/auth-links';
 import type { FormState } from './common';
 
 async function guard(perm: string) {
@@ -165,21 +166,42 @@ export async function updateProfile(_p: FormState, form: FormData): Promise<Form
 export async function inviteMember(_p: FormState, form: FormData): Promise<FormState> {
   const g = await guard('users.manage');
   if (!g) return DENIED;
-  const parsed = z.object({ email: z.email('Email invalide'), fullName: z.string().trim().min(2, 'Nom requis').max(120), role: z.enum(ROLES), employeeId: z.uuid().optional().or(z.literal('')) })
-    .safeParse({ email: form.get('email'), fullName: form.get('fullName'), role: form.get('role'), employeeId: form.get('employeeId') ?? '' });
+  const parsed = z.object({
+    email: z.email('Email invalide'), fullName: z.string().trim().min(2, 'Nom requis').max(120), role: z.enum(ROLES),
+    employeeId: z.uuid().optional().or(z.literal('')), delivery: z.enum(['email', 'link']).default('email'),
+  }).safeParse({ email: form.get('email'), fullName: form.get('fullName'), role: form.get('role'), employeeId: form.get('employeeId') ?? '', delivery: form.get('delivery') ?? undefined });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Formulaire invalide.' };
   const d = parsed.data;
   if (!roleAllowed(g.ctx.role, d.role)) return { error: 'Vous ne pouvez pas attribuer ce rôle.' };
   const admin = createServiceClient();
   if (!admin) return { error: 'Invitation impossible : la clé SUPABASE_SERVICE_ROLE_KEY n\'est pas configurée sur le serveur (voir ENVIRONMENT.md).' };
-  const { data, error } = await admin.auth.admin.inviteUserByEmail(d.email, {
-    redirectTo: `${env.siteUrl}/admin/connexion/confirmer?next=/admin/connexion/nouveau-mot-de-passe`,
-    data: { full_name: d.fullName },
-  });
-  if (error || !data.user) return { error: error?.message?.includes('already') ? 'Un compte existe déjà pour cet email.' : 'Échec de l\'envoi de l\'invitation.' };
+  const redirectTo = `${env.siteUrl}/admin/connexion/confirmer?next=${PASSWORD_PAGE}`;
+  const options = { redirectTo, data: { full_name: d.fullName } };
+  let userId: string;
+  let link: string | undefined;
+  if (d.delivery === 'link') {
+    // Aucun email n'est envoyé : Supabase crée le compte et renvoie le lien d'invitation, que la responsable
+    // transmet elle-même (WhatsApp). Le lien est à usage unique et expire comme un lien reçu par email.
+    const { data, error } = await admin.auth.admin.generateLink({ type: 'invite', email: d.email, options });
+    if (error || !data.user || !data.properties?.hashed_token) return { error: alreadyRegistered(error) ? 'Un compte existe déjà pour cet email.' : 'Échec de la création du lien d\'invitation.' };
+    userId = data.user.id;
+    link = accessLink(env.siteUrl, data.properties.hashed_token, 'invite');
+  } else {
+    const { data, error } = await admin.auth.admin.inviteUserByEmail(d.email, options);
+    if (error || !data.user) {
+      if (alreadyRegistered(error)) return { error: 'Un compte existe déjà pour cet email.' };
+      return { error: 'L\'email d\'invitation n\'a pas pu partir (envoi d\'emails non configuré ou limite horaire atteinte). Choisissez « Lien à transmettre » pour l\'envoyer sur WhatsApp.' };
+    }
+    userId = data.user.id;
+  }
   // Le profil est créé avec la session de l'administratrice : RLS + garde-fous de rôles en base s'appliquent.
-  const { error: pErr } = await g.supabase.from('profiles').upsert({ id: data.user.id, full_name: d.fullName, role: d.role, employee_id: d.employeeId || null, is_active: true });
+  const { error: pErr } = await g.supabase.from('profiles').upsert({ id: userId, full_name: d.fullName, role: d.role, employee_id: d.employeeId || null, is_active: true });
   if (pErr) return { error: `Invitation envoyée mais profil non créé : ${dbErrorMessage(pErr)}` };
   revalidatePath('/admin/equipe/comptes');
+  if (link) return { ok: true, message: `Lien d'invitation créé pour ${d.fullName}. Transmettez-le-lui maintenant : il ne sert qu'une fois et expire au bout d'une heure.`, link };
   return { ok: true, message: `Invitation envoyée à ${d.email}.` };
+}
+
+function alreadyRegistered(error: { message?: string; code?: string } | null): boolean {
+  return !!error && (error.code === 'email_exists' || /already/i.test(error.message ?? ''));
 }

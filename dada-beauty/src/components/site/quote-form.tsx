@@ -6,11 +6,15 @@ import { Button } from '@/components/ui/button';
 import { Alert, Field, Input, Select, Textarea } from '@/components/ui/field';
 import { submitQuote, type ActionResult } from '@/server/public-actions';
 import { todayInDakar } from '@/lib/format';
+import { UPLOAD_FAILED, withShrunkImages } from '@/lib/image-actions';
+
+type QuoteState = ActionResult<{ reference: string }> | null;
+const submitQuoteAction = withShrunkImages<QuoteState>(submitQuote as (p: QuoteState, f: FormData) => Promise<QuoteState>, 'inspiration', { ok: false, error: UPLOAD_FAILED });
 
 const SERVICES = ['Maquillage mariée', 'Maquillage invitées', 'Soft glam', 'Full glam', 'Onglerie', 'Extensions de cils', 'Pose lace frontal', 'Coiffure', 'Essai maquillage'];
 
 export function QuoteForm() {
-  const [state, action, pending] = useActionState<ActionResult<{ reference: string }> | null, FormData>(submitQuote, null);
+  const [state, action, pending] = useActionState<QuoteState, FormData>(submitQuoteAction, null);
   if (state?.ok) {
     return (
       <div className="card p-8 text-center">
@@ -50,7 +54,7 @@ export function QuoteForm() {
       </fieldset>
       <Field label="Budget indicatif en FCFA (facultatif)" htmlFor="q-budget" error={f.budgetHint}><Input id="q-budget" name="budgetHint" type="number" min={0} step={1000} inputMode="numeric" /></Field>
       <Field label="Votre message" htmlFor="q-msg" error={f.message}><Textarea id="q-msg" name="message" maxLength={2000} placeholder="Horaires, style recherché, demandes particulières…" /></Field>
-      <Field label="Photos d'inspiration (facultatif, 5 max, 5 Mo chacune)" htmlFor="q-files" error={f.inspiration}>
+      <Field label="Photos d'inspiration (facultatif, 5 max)" hint="Vos photos sont allégées automatiquement avant l'envoi." htmlFor="q-files" error={f.inspiration}>
         <Input id="q-files" name="inspiration" type="file" accept="image/jpeg,image/png,image/webp" multiple className="file:mr-3 file:rounded-full file:border-0 file:bg-powder-100 file:px-3 file:py-1.5 file:text-sm" />
       </Field>
       <Button type="submit" size="lg" disabled={pending}>{pending && <Loader2 className="size-5 animate-spin" />} Envoyer ma demande de devis</Button>

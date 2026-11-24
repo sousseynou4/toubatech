@@ -7,6 +7,10 @@ import { Field, Input, Select, Textarea } from '@/components/ui/field';
 import { FormFeedback, SubmitButton } from '@/components/admin/form-bits';
 import { createProduct, removeProductImage, saveVariant, updateProduct, uploadProductImage } from '@/server/admin/commerce';
 import { useResetOnSuccess } from './use-reset';
+import type { FormState } from '@/server/admin/common';
+import { UPLOAD_FAILED, withShrunkImages } from '@/lib/image-actions';
+
+const uploadProductImageAction = withShrunkImages<FormState>(uploadProductImage, 'file', { error: UPLOAD_FAILED });
 
 interface ProductValues {
   id?: string; name?: string; slug?: string; category_id?: string; supplier_id?: string | null; brand?: string | null;
@@ -76,7 +80,7 @@ export function VariantForm({ productId, variant }: { productId: string; variant
 }
 
 export function ImageUploadForm({ productId }: { productId: string }) {
-  const [state, action] = useActionState(uploadProductImage, null);
+  const [state, action] = useActionState(uploadProductImageAction, null);
   const ref = useResetOnSuccess(state);
   return (
     <form ref={ref} action={action} className="grid gap-3">

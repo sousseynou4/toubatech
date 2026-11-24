@@ -73,4 +73,8 @@ stocks, statistiques et rôles.
     - deux réservations simultanées du même créneau : une seule est acceptée ;
     - ouverture de caisse, acompte en espèces, démarrage puis fin du rendez-vous, solde par Wave ;
     - vente en espèces, retrait, clôture avec écart (27 500 attendus, 27 000 comptés, −500) ;
-  - **restent à vérifier à la main :** l'envoi d'images (galerie, devis) et les invitations par email (SMTP).
+  - troisième parcours validé contre la vraie base (24/11/2026) :
+    - photos de 4 à 7,5 Mo dans la galerie (une ou trois à la fois), sur une prestation, un produit et une demande de devis : elles sont allégées dans le navigateur et s'affichent sur le site et dans l'admin ;
+    - invitation d'une employée par lien : ouverture du lien, choix du mot de passe, accès au tableau de bord ; un lien déjà utilisé est refusé ;
+  - **reste bloqué :** l'invitation **par email**. Le projet utilise l'envoi d'emails intégré à Supabase : il ne livre qu'aux membres de l'organisation Supabase, 2 emails par heure au plus, et il interdit de traduire les modèles. Il faut brancher un service SMTP (voir DEPLOYMENT.md). En attendant, invitez par lien (WhatsApp) ;
+  - **restent à vérifier à la main :** la lecture des vidéos TikTok sur le site en ligne (TikTok était inaccessible depuis l'environnement de recette).
