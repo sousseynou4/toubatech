@@ -2,6 +2,16 @@
 
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Versionnage sémantique.
 
+## [0.6.2] — 2026-11-24
+
+### Corrigé (relecture de l'adaptateur Wave contre la documentation officielle docs.wave.com)
+- **Paiement perdu après un premier échec.** Wave envoie `checkout.session.payment_failed` à chaque tentative ratée (solde insuffisant, par exemple), puis `checkout.session.completed` si la cliente réessaie avec succès. L'échec était traité comme définitif : le paiement passait « échoué » et la réussite qui suivait était refusée (« déjà finalisé »). L'argent était reçu sans que l'acompte soit enregistré. Désormais, seul `checkout.session.completed` avec `payment_status = succeeded` fait changer le paiement ; les échecs sont ignorés.
+- **Rotation du secret des webhooks.** Pendant une rotation, Wave envoie plusieurs signatures `v1=` ; seule la dernière était lue, ce qui pouvait refuser un webhook authentique. Toutes sont maintenant vérifiées.
+
+### Ajouté
+- Signature facultative des appels à Wave (`WAVE_API_SIGNING_SECRET`), recommandée par Wave pour qu'une clé API volée ne suffise pas.
+- Tests : exemple signé officiel de la documentation Wave, rotation de secret, échec suivi d'un succès, événement de test.
+
 ## [0.6.1] — 2026-11-24
 
 ### Amélioré

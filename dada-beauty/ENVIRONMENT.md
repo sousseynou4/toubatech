@@ -13,7 +13,8 @@ ignoré par Git. Sur Vercel, renseignez les variables par environnement (Product
 | `CRON_SECRET` | **OUI** | oui si cron | Protège `/api/cron/rappels`. Vercel l'envoie dans `Authorization: Bearer …`. |
 | `NEXT_PUBLIC_DEMO_MODE` | non | non | `true` affiche le bandeau « démonstration ». À utiliser uniquement sur l'environnement de démo. |
 | `WAVE_API_KEY` | **OUI** | non | Clé API Wave Business (Checkout). Sans elle, aucun paiement Wave en ligne. |
-| `WAVE_WEBHOOK_SECRET` | **OUI** | avec Wave | Secret de signature des webhooks. URL à déclarer chez Wave : `https://<domaine>/api/paiements/webhook/wave` |
+| `WAVE_WEBHOOK_SECRET` | **OUI** | avec Wave | Secret de signature des webhooks (`wave_sn_WHS_…`). Déclarer chez Wave l'URL `https://<domaine>/api/paiements/webhook/wave` avec la stratégie **« Signing Secret »** et l'événement `checkout.session.completed` (et `checkout.session.payment_failed`, ignoré sans risque). |
+| `WAVE_API_SIGNING_SECRET` | **OUI** | non (recommandé) | Si la clé API Wave est créée avec « request signing » (recommandé par Wave contre le vol de clé) : son secret de signature (`wave_sn_AKS_…`). Chaque appel à Wave est alors signé. |
 | `ORANGE_MONEY_CLIENT_ID` / `_CLIENT_SECRET` / `_MERCHANT_KEY` / `_WEBHOOK_SECRET` | **OUI** | non | Réservées à la future intégration Orange Money. **Non utilisées à ce jour.** |
 | `WHATSAPP_ACCESS_TOKEN` | **OUI** | non | Jeton WhatsApp Cloud API (Meta) |
 | `WHATSAPP_PHONE_NUMBER_ID` | non | avec WhatsApp | Identifiant du numéro WhatsApp Business |
