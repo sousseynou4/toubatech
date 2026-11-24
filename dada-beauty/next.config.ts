@@ -19,6 +19,11 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  experimental: {
+    // Les photos sont réduites dans le navigateur (src/lib/image-prep.ts) : 4 Mo laisse de la marge
+    // tout en restant sous la limite de 4,5 Mo des fonctions Vercel.
+    serverActions: { bodySizeLimit: '4mb' },
+  },
   images: {
     formats: ['image/avif', 'image/webp'],
     remotePatterns: supabaseHost ? [{ protocol: 'https', hostname: supabaseHost, pathname: '/storage/v1/object/public/**' }] : [],

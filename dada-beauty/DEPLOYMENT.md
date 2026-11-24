@@ -29,8 +29,17 @@ tests SQL, build, E2E) **et** sans validation en staging.
    - Site URL : `https://<domaine>`.
    - Redirect URLs : `https://<domaine>/admin/connexion/confirmer`, plus l'URL de preview si besoin.
    - Mot de passe : 12 caractères minimum.
-   - SMTP personnalisé recommandé (l'expéditeur par défaut de Supabase est limité).
-   - Traduisez en français les modèles d'emails (invitation, réinitialisation).
+   - **SMTP personnalisé, indispensable pour envoyer des emails.** Sans lui, Supabase ne livre qu'aux membres de
+     l'organisation Supabase, 2 emails par heure au plus, et refuse toute modification des modèles.
+     Authentication → Emails → SMTP Settings : hôte, port, identifiant et mot de passe du fournisseur (Brevo,
+     Resend, Mailjet…), expéditeur `Dada Beauty <no-reply@votre-domaine>` (domaine vérifié chez le fournisseur).
+     En attendant, l'équipe est invitée par lien (menu Équipe → « Lien à transmettre »).
+   - **Modèles d'emails en français**, une fois le SMTP branché : Authentication → Emails → Templates.
+     - « Invite user » : sujet et contenu de `supabase/templates/invite.html` ;
+     - « Reset password » : sujet et contenu de `supabase/templates/recovery.html` ;
+     - les sujets sont dans `supabase/config.toml`.
+     Les boutons pointent vers `/admin/connexion/confirmer?token_hash=…`. Le serveur vérifie le lien lui-même,
+     sans dépendre du fragment `#access_token` des modèles par défaut.
 5. Storage : les buckets `media` (public) et `quote-inspirations` (privé) et leurs politiques sont créés par la migration `…000900_storage.sql`.
 6. Créez le compte propriétaire depuis un poste de confiance :
    ```bash

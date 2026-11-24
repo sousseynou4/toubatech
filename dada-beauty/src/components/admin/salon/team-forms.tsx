@@ -161,17 +161,46 @@ export function ProfileRow({ profile, employees, actorRole, isSelf }: {
 export function InviteForm({ employees, actorRole }: { employees: { id: string; display_name: string }[]; actorRole: AppRole }) {
   const [state, action] = useActionState(inviteMember, null);
   return (
-    <form action={action} className="grid gap-3" key={state?.ok ? 'done' : 'f'}>
-      <FormFeedback state={state} />
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Nom" htmlFor="iv-n"><Input id="iv-n" name="fullName" required maxLength={120} /></Field>
-        <Field label="Email" htmlFor="iv-e"><Input id="iv-e" name="email" type="email" required /></Field>
-        <Field label="Rôle" htmlFor="iv-r"><Select id="iv-r" name="role" defaultValue="staff">{roleOptions(actorRole).map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}</Select></Field>
-        <Field label="Employée liée (planning)" htmlFor="iv-emp"><Select id="iv-emp" name="employeeId" defaultValue=""><option value="">Aucune</option>{employees.map((e) => <option key={e.id} value={e.id}>{e.display_name}</option>)}</Select></Field>
+    <div className="grid gap-3">
+      {state?.ok && state.link && <InviteLink link={state.link} />}
+      <form action={action} className="grid gap-3" key={state?.ok ? 'done' : 'f'}>
+        <FormFeedback state={state} />
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Field label="Nom" htmlFor="iv-n"><Input id="iv-n" name="fullName" required maxLength={120} /></Field>
+          <Field label="Email (identifiant de connexion)" htmlFor="iv-e"><Input id="iv-e" name="email" type="email" required /></Field>
+          <Field label="Rôle" htmlFor="iv-r"><Select id="iv-r" name="role" defaultValue="staff">{roleOptions(actorRole).map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}</Select></Field>
+          <Field label="Employée liée (planning)" htmlFor="iv-emp"><Select id="iv-emp" name="employeeId" defaultValue=""><option value="">Aucune</option>{employees.map((e) => <option key={e.id} value={e.id}>{e.display_name}</option>)}</Select></Field>
+        </div>
+        <fieldset className="grid gap-2 text-sm">
+          <legend className="label">Comment transmettre l&apos;invitation ?</legend>
+          <label className="flex items-start gap-2"><input type="radio" name="delivery" value="link" defaultChecked className="mt-1 accent-[var(--color-rosewood)]" />
+            <span>Lien à transmettre (WhatsApp, SMS…)<span className="block text-xs text-muted">Vous recevez le lien ici et l&apos;envoyez vous-même. Marche sans configuration d&apos;email.</span></span></label>
+          <label className="flex items-start gap-2"><input type="radio" name="delivery" value="email" className="mt-1 accent-[var(--color-rosewood)]" />
+            <span>Email envoyé par le site<span className="block text-xs text-muted">Nécessite un service d&apos;envoi d&apos;emails (SMTP) configuré dans Supabase.</span></span></label>
+        </fieldset>
+        <p className="text-xs text-muted">La personne choisit elle-même son mot de passe en ouvrant le lien. Aucun mot de passe n&apos;est créé ni transmis par l&apos;administration.</p>
+        <SubmitButton size="sm" className="justify-self-start">Inviter</SubmitButton>
+      </form>
+    </div>
+  );
+}
+
+function InviteLink({ link }: { link: string }) {
+  const [copied, setCopied] = useState(false);
+  const text = `Bonjour, voici votre lien pour activer votre accès à l'espace équipe Dada Beauty. Il ne sert qu'une fois et expire dans une heure : ${link}`;
+  return (
+    <div className="grid gap-2 rounded-2xl border border-line bg-powder-50 p-3">
+      <p className="text-sm font-medium">Lien d&apos;invitation (à usage unique, valable 1 heure)</p>
+      <Input readOnly value={link} aria-label="Lien d'invitation" onFocus={(e) => e.currentTarget.select()} className="font-mono text-xs" />
+      <div className="flex flex-wrap gap-2">
+        <button type="button" className="rounded-full border border-line bg-white px-3 py-1.5 text-sm"
+          onClick={() => navigator.clipboard?.writeText(link).then(() => setCopied(true), () => setCopied(false))}>
+          {copied ? 'Copié ✓' : 'Copier le lien'}
+        </button>
+        <a href={`https://wa.me/?text=${encodeURIComponent(text)}`} target="_blank" rel="noopener noreferrer" className="rounded-full border border-[#25D366] bg-white px-3 py-1.5 text-sm font-medium text-ink hover:bg-[#25D366]/10">Envoyer sur WhatsApp</a>
       </div>
-      <p className="text-xs text-muted">La personne reçoit un email pour définir son mot de passe. Aucun mot de passe n&apos;est créé ni transmis par l&apos;administration.</p>
-      <SubmitButton size="sm" className="justify-self-start">Envoyer l&apos;invitation</SubmitButton>
-    </form>
+      <p className="text-xs text-muted">Ne le partagez qu&apos;avec la personne invitée : ce lien ouvre son compte.</p>
+    </div>
   );
 }
 

@@ -101,8 +101,16 @@ motif, et le montant est plafonné au paiement d'origine. Un remboursement en es
 | Ventes | Produits, stocks, commandes, caisse, paiements |
 | Employée | Ses rendez-vous uniquement (démarrer et terminer) |
 
-Pour inviter une personne, passez par le menu Équipe, à la gestion des comptes. Désactivez le compte d'une
-personne qui quitte le salon.
+Pour inviter une personne, passez par le menu Équipe, à la gestion des comptes :
+
+1. Saisissez son nom, son email (il lui servira d'identifiant de connexion) et son rôle.
+2. Choisissez **« Lien à transmettre »**, puis cliquez sur « Inviter ».
+3. Le lien s'affiche : touchez « Envoyer sur WhatsApp », ou copiez-le. Il ne sert qu'une fois et expire au bout
+   d'une heure. Ne l'envoyez qu'à la personne invitée : il ouvre son compte.
+4. En l'ouvrant, elle choisit son mot de passe et arrive sur son tableau de bord.
+
+L'option « Email envoyé par le site » ne marche qu'une fois le service d'envoi d'emails (SMTP) configuré.
+Désactivez le compte d'une personne qui quitte le salon.
 
 ## 10. Statistiques
 

@@ -8,6 +8,10 @@ import { Button } from '@/components/ui/button';
 import { FormFeedback, SubmitButton } from '@/components/admin/form-bits';
 import { moveCategory, removeServiceImage, saveCategory, saveService } from '@/server/admin/catalog';
 import type { FormState } from '@/server/admin/common';
+import { UPLOAD_FAILED, withShrunkImages } from '@/lib/image-actions';
+
+const saveServiceAction = withShrunkImages<FormState>(saveService, 'image', { error: UPLOAD_FAILED });
+const saveCategoryAction = withShrunkImages<FormState>(saveCategory, 'image', { error: UPLOAD_FAILED });
 
 export interface ServiceValues {
   id?: string; name: string; slug: string; category_id: string; short_description: string | null; description: string | null;
@@ -24,7 +28,7 @@ const Check = ({ name, label, defaultChecked, hint }: { name: string; label: str
 export function ServiceForm({ service, categories, employees, authorized, canTeam }: {
   service?: ServiceValues; categories: { id: string; name: string }[]; employees: { id: string; display_name: string }[]; authorized: string[]; canTeam: boolean;
 }) {
-  const [state, action] = useActionState(saveService, null);
+  const [state, action] = useActionState(saveServiceAction, null);
   const [pending, start] = useTransition();
   const [imgState, setImgState] = useState<FormState>(null);
   const s = service;
@@ -91,7 +95,7 @@ export function ServiceForm({ service, categories, employees, authorized, canTea
 export interface CategoryValues { id?: string; name: string; slug: string; tagline: string | null; description: string | null; sort_order: number; is_active: boolean }
 
 export function CategoryForm({ category }: { category?: CategoryValues }) {
-  const [state, action] = useActionState(saveCategory, null);
+  const [state, action] = useActionState(saveCategoryAction, null);
   const c = category;
   return (
     <form action={action} className="grid gap-3" key={!c && state?.ok ? 'done' : 'f'}>

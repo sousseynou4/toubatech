@@ -11,6 +11,39 @@ import { FormFeedback, SubmitButton } from '@/components/admin/form-bits';
 import { CustomerPicker } from '@/components/admin/customer-picker';
 import { deleteMedia, deleteReview, moderateReview, updateMedia, updateQuote, uploadMedia } from '@/server/admin/content';
 import type { FormState } from '@/server/admin/common';
+import { unstable_rethrow } from 'next/navigation';
+import { batchBySize, MAX_IMAGE_BYTES, shrinkImage, UPLOAD_FAILED } from '@/lib/image-prep';
+
+const plural = (n: number) => `${n} image${n > 1 ? 's' : ''} ajoutée${n > 1 ? 's' : ''}`;
+
+/**
+ * Photos de la galerie : réduites dans le navigateur, puis envoyées en plusieurs lots si besoin, pour
+ * rester sous la limite de taille d'une requête. L'emplacement et l'image de catégorie ne s'appliquent
+ * qu'à la première photo, comme pour un envoi unique.
+ */
+async function uploadMediaInBatches(prev: FormState, form: FormData): Promise<FormState> {
+  const files = form.getAll('files').filter((f): f is File => f instanceof File && f.size > 0).slice(0, 10);
+  if (!files.length) return uploadMedia(prev, form);
+  let sent = 0;
+  try {
+    const shrunk = await Promise.all(files.map((f) => shrinkImage(f, MAX_IMAGE_BYTES)));
+    for (const [i, batch] of batchBySize(shrunk).entries()) {
+      const fd = new FormData();
+      for (const [k, v] of form.entries()) {
+        if (k === 'files') continue;
+        fd.append(k, i > 0 && (k === 'slot' || k === 'categoryImageFor') ? '' : v);
+      }
+      for (const f of batch) fd.append('files', f);
+      const res = await uploadMedia(prev, fd);
+      if (!res?.ok) return { error: sent ? `${plural(sent)}, puis : ${res?.error ?? UPLOAD_FAILED}` : res?.error ?? UPLOAD_FAILED };
+      sent += batch.length;
+    }
+  } catch (e) {
+    unstable_rethrow(e);
+    return { error: sent ? `${plural(sent)}, puis : ${UPLOAD_FAILED}` : UPLOAD_FAILED };
+  }
+  return { ok: true, message: `${plural(sent)}.` };
+}
 
 
 function MetaFields({ m, categories }: { m?: MediaValues; categories: { id: string; name: string }[] }) {
@@ -33,11 +66,12 @@ function MetaFields({ m, categories }: { m?: MediaValues; categories: { id: stri
 }
 
 export function UploadForm({ categories }: { categories: { id: string; name: string }[] }) {
-  const [state, action] = useActionState(uploadMedia, null);
+  const [state, action] = useActionState(uploadMediaInBatches, null);
   return (
     <form action={action} className="grid gap-3" key={state?.ok ? 'done' : 'f'}>
       <FormFeedback state={state} />
-      <Input name="files" type="file" multiple accept="image/jpeg,image/png,image/webp,image/avif" required aria-label="Images (10 max, 8 Mo chacune)" />
+      <Input name="files" type="file" multiple accept="image/jpeg,image/png,image/webp,image/avif" required aria-label="Images (10 max)" />
+      <p className="-mt-1 text-xs text-muted">10 photos max par envoi. Elles sont allégées automatiquement (2048 px, position GPS retirée).</p>
       <MetaFields categories={categories} />
       <fieldset className="rounded-2xl bg-powder-50 p-3">
         <legend className="px-1 text-sm font-medium">Photo d&apos;une cliente ? (facultatif)</legend>

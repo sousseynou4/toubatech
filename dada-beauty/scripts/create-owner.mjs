@@ -55,10 +55,20 @@ if (!user && !linkOnly) {
   user = data.user;
   console.log(`✔ Invitation envoyée à ${email} (vérifiez la configuration SMTP de Supabase).`);
 } else {
-  const { data, error } = await sb.auth.admin.generateLink({ type: user ? 'recovery' : 'invite', email, options: { redirectTo, data: { full_name: name } } });
+  const linkType = user ? 'recovery' : 'invite';
+  const { data, error } = await sb.auth.admin.generateLink({ type: linkType, email, options: { redirectTo, data: { full_name: name } } });
   if (error) { console.error('✘ Génération du lien impossible :', error.message); process.exit(1); }
   user = data.user;
-  link = data.properties?.action_link ?? null;
+  // Lien vers le site (jeton haché vérifié côté serveur), plutôt que le lien brut de Supabase dont la session
+  // arrive dans le fragment d'URL. Même format que src/lib/auth-links.ts.
+  const hashed = data.properties?.hashed_token;
+  if (hashed) {
+    const u = new URL('/admin/connexion/confirmer', site);
+    u.searchParams.set('token_hash', hashed);
+    u.searchParams.set('type', linkType);
+    u.searchParams.set('next', '/admin/connexion/nouveau-mot-de-passe');
+    link = u.toString();
+  }
 }
 
 const { error: pErr } = await sb.from('profiles').upsert({ id: user.id, full_name: name || email, role, is_active: true }, { onConflict: 'id' });
