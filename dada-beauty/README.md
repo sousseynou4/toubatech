@@ -60,7 +60,10 @@ stocks, statistiques et rôles.
 **Reste à fournir ou à activer :**
 
 - **Données métier :** les tarifs, durées, horaires, l'équipe et les photos ne sont pas inventés. Les prestations sont au statut « à configurer » (affichées « Tarif sur demande »).
-- **Wave (paiement en ligne) :** l'adaptateur `src/lib/payments/wave.ts` a été écrit d'après la documentation publique connue, **sans pouvoir la consulter** (docs.wave.com était inaccessible depuis l'environnement de développement). Il faut le valider avec un compte Wave Business en test avant toute ouverture aux clientes. Tant que les clés sont absentes, aucun paiement en ligne n'est proposé.
+- **Wave (paiement en ligne) :**
+  - l'adaptateur `src/lib/payments/wave.ts` a été **relu contre la documentation officielle** le 24/11/2026 ; deux défauts ont été corrigés (voir CHANGELOG 0.6.2) et l'exemple signé de la documentation sert de test ;
+  - il reste à le tester avec un compte Wave Business avant d'ouvrir le paiement aux clientes ;
+  - **le bouton « Payer avec Wave » n'existe pas encore côté clientes** : le serveur (`/api/paiements/initier`, webhook) est prêt, mais aucune page ne l'appelle. Tant que ce bouton et les clés manquent, aucun paiement en ligne n'est proposé.
 - **Orange Money en ligne :** pas encore implémenté. Il faut le contrat marchand et la documentation de l'API.
 - **WhatsApp Business Platform :** l'adaptateur est prêt, mais il faut un compte Meta, un numéro vérifié et des modèles de messages approuvés. En attendant, l'équipe envoie les messages via des liens WhatsApp pré-remplis, tracés dans le journal des messages.
 - **Mentions légales :** NINEA, RCCM, responsable de publication et durées de conservation sont à compléter (signalés « à compléter » sur le site).
