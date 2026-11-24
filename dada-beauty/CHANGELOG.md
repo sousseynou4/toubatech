@@ -2,6 +2,24 @@
 
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Versionnage sémantique.
 
+## [0.6.0] — 2026-11-24
+
+### Ajouté
+- **Profil TikTok du salon dans la galerie** (section « Sur TikTok », sous le filtre « Tout »).
+  - Le site affiche le cadre officiel de TikTok : l'en-tête du compte et ses dernières vidéos, mis à jour par TikTok, sans coller les liens un par un.
+  - Il s'active dès que le lien du profil est renseigné dans Paramètres → TikTok (par exemple https://www.tiktok.com/@aidasamb949).
+  - Comme pour les vidéos, rien n'est chargé depuis TikTok avant le clic de la visiteuse.
+  - La hauteur du cadre suit la mise en page de TikTok selon la largeur de l'écran.
+
+### Vérifié
+- Lecture réelle d'une vidéo du compte @aidasamb949 dans le lecteur du site : elle va jusqu'au bout.
+- Affichage du profil (abonnés, vidéos) sur téléphone et sur ordinateur.
+- Aucune requête vers TikTok avant le clic.
+
+### Modifié
+- Lecteurs TikTok : ajout de `allow-popups-to-escape-sandbox`, pour que « Ouvrir TikTok » ouvre une page normale.
+- Le cadre de profil n'utilise pas le script `embed.js` de TikTok : sa bibliothèque a renvoyé une erreur 404 depuis un de ses serveurs lors des tests.
+
 ## [0.5.0] — 2026-11-24
 
 ### Corrigé (trouvé en recette sur le projet Supabase)

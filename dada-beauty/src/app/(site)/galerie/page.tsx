@@ -4,7 +4,8 @@ import { ArtImage } from '@/components/ui/art-image';
 import { Section, SectionHeading } from '@/components/ui/section';
 import { Alert } from '@/components/ui/field';
 import { getGallery, getSettings, getSocialVideos } from '@/server/catalog';
-import { TikTokEmbed } from '@/components/site/tiktok-embed';
+import { TikTokEmbed, TikTokProfileEmbed } from '@/components/site/tiktok-embed';
+import { parseTikTokProfile } from '@/lib/tiktok';
 import { cn } from '@/lib/cn';
 
 export const revalidate = 300;
@@ -26,6 +27,8 @@ export default async function GalleryPage({ searchParams }: PageProps<'/galerie'
   const { categorie } = await searchParams;
   const cat = typeof categorie === 'string' && FILTERS.some((f) => f.value === categorie) ? categorie : '';
   const [items, videos, { settings }] = await Promise.all([getGallery(cat || undefined, 120), getSocialVideos(cat || undefined, 24), getSettings()]);
+  // Profil TikTok du salon (Paramètres → réseaux sociaux) : affiché sous « Tout » uniquement.
+  const tiktokHandle = cat ? null : parseTikTokProfile(settings.tiktok_url);
   return (
     <Section>
       <SectionHeading as="h1" eyebrow="Galerie" title={<>Nos <em className="text-rosewood">réalisations</em></>} intro="Les photos de clientes sont publiées uniquement avec leur accord explicite." />
@@ -37,7 +40,7 @@ export default async function GalleryPage({ searchParams }: PageProps<'/galerie'
           </Link>
         ))}
       </nav>
-      {items.length === 0 && videos.length === 0 ? (
+      {items.length === 0 && videos.length === 0 && !tiktokHandle ? (
         <Alert className="mt-10">La galerie sera bientôt alimentée avec les réalisations du salon. Suivez-nous sur nos réseaux en attendant !</Alert>
       ) : items.length > 0 && (
         <div className="mt-10 columns-2 gap-3 sm:columns-3 lg:columns-4 [&>*]:mb-3">
@@ -61,6 +64,13 @@ export default async function GalleryPage({ searchParams }: PageProps<'/galerie'
           <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             {videos.map((v) => <TikTokEmbed key={v.id} videoId={v.video_id} title={v.title} url={v.url} />)}
           </div>
+        </section>
+      )}
+      {tiktokHandle && settings.tiktok_url && (
+        <section aria-labelledby="tiktok-title" className="mt-14">
+          <h2 id="tiktok-title" className="font-display text-3xl">Sur <em className="text-rosewood">TikTok</em></h2>
+          <p className="mt-2 mb-6 text-sm text-muted">Nos dernières vidéos, publiées sur notre compte TikTok. Le contenu est chargé depuis TikTok seulement si vous l&apos;ouvrez.</p>
+          <TikTokProfileEmbed handle={tiktokHandle} url={settings.tiktok_url} />
         </section>
       )}
     </Section>
