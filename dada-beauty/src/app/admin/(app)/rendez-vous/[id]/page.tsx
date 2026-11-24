@@ -58,7 +58,7 @@ export default async function AppointmentDetail({ params }: PageProps<'/admin/re
                 <dd><ul className="mt-1 divide-y divide-line/70 rounded-xl border border-line">{a.services.map((s: { service_name: string; unit_price: number; duration_minutes: number; quantity: number }, i: number) => (
                   <li key={i} className="flex justify-between px-3 py-2"><span>{s.service_name} <span className="text-muted">· {formatDuration(s.duration_minutes)}</span></span><span className="tabular-nums">{formatXOF(s.unit_price * s.quantity)}</span></li>
                 ))}</ul></dd></div>
-              <div><dt className="text-muted">Montant</dt><dd className="font-semibold">{formatXOF(a.total_amount)}</dd></div>
+              <div><dt className="text-muted">Montant</dt><dd className="font-semibold">{formatXOF(a.total_amount)}{a.discount_amount > 0 && <span className="block text-xs font-normal text-muted">après remise de {formatXOF(a.discount_amount)} (code {a.promotion_code})</span>}</dd></div>
               <div><dt className="text-muted">Encaissé</dt><dd className="font-semibold">{formatXOF(a.paid_amount)} {a.deposit_required > 0 && <span className="font-normal text-muted">(acompte demandé : {formatXOF(a.deposit_required)})</span>}</dd></div>
               <div><dt className="text-muted">Origine</dt><dd>{({ online: 'Site internet', admin: 'Équipe', whatsapp: 'WhatsApp', phone: 'Téléphone', walk_in: 'Sur place' } as Record<string, string>)[a.source]}</dd></div>
               {a.preferred_payment_method && <div><dt className="text-muted">Paiement souhaité</dt><dd>{PAYMENT_METHOD_LABEL[a.preferred_payment_method as PaymentMethod]}</dd></div>}

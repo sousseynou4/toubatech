@@ -43,4 +43,9 @@ describe('validation', () => {
     expect(r.success && r.data.promotionCode).toBe('BIENVENUE10');
     expect(orderSchema.safeParse(order).success).toBe(true);
   });
+  it('accepte un code promo facultatif sur la réservation', () => {
+    const r = bookingSchema.safeParse({ ...base, promotionCode: ' mariee20 ' });
+    expect(r.success && r.data.promotionCode).toBe('MARIEE20');
+    expect(bookingSchema.safeParse({ ...base, promotionCode: 'x' }).success).toBe(false);
+  });
 });
