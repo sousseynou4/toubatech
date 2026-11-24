@@ -52,7 +52,7 @@ export function IdentityForm({ s }: { s: BusinessSettings }) {
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Instagram" htmlFor="s-ig"><Input id="s-ig" name="instagram_url" type="url" defaultValue={s.instagram_url ?? ''} placeholder="https://instagram.com/…" /></Field>
         <Field label="Facebook" htmlFor="s-fb"><Input id="s-fb" name="facebook_url" type="url" defaultValue={s.facebook_url ?? ''} /></Field>
-        <Field label="TikTok" htmlFor="s-tt"><Input id="s-tt" name="tiktok_url" type="url" defaultValue={s.tiktok_url ?? ''} /></Field>
+        <Field label="TikTok" htmlFor="s-tt" hint="Lien du profil, ex. https://www.tiktok.com/@aidasamb949 : ses dernières vidéos s’affichent dans la galerie."><Input id="s-tt" name="tiktok_url" type="url" defaultValue={s.tiktok_url ?? ''} /></Field>
         <Field label="Snapchat" htmlFor="s-sc"><Input id="s-sc" name="snapchat_url" type="url" defaultValue={s.snapchat_url ?? ''} /></Field>
       </div>
     </SettingsForm>

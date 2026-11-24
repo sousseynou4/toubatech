@@ -146,6 +146,7 @@ Pour exporter : boutons **CSV** (s'ouvrent dans Excel) ou **Imprimer / PDF**.
   - sur TikTok, faites Partager → Copier le lien ;
   - dans Galerie & médias → « Vidéos TikTok », collez le lien, ajoutez un titre et une catégorie, puis « Ajouter la vidéo » ;
   - la vidéo s'affiche dans la galerie du site avec le lecteur TikTok ; rien n'est copié ;
+  - **profil complet :** collez le lien du profil (ex. https://www.tiktok.com/@aidasamb949) dans Paramètres → TikTok. La galerie affiche alors une section « Sur TikTok » avec ses dernières vidéos, mises à jour automatiquement ;
   - si la vidéo est supprimée ou passée en privé sur TikTok, elle ne sera plus lisible sur le site : retirez-la ici ;
   - renseignez aussi le lien du compte dans Paramètres → Réseaux sociaux : un lien « Suivre sur TikTok » apparaîtra.
 

@@ -58,3 +58,22 @@ export function tiktokPlayerUrl(videoId: string): string {
   if (!/^\d{15,25}$/.test(videoId)) throw new Error('INVALID_TIKTOK_ID');
   return `https://www.tiktok.com/player/v1/${videoId}?rel=0&music_info=1&description=1`;
 }
+
+/** Compte TikTok d'un lien de profil (https://www.tiktok.com/@compte), ou null. */
+export function parseTikTokProfile(input: string | null | undefined): string | null {
+  if (!input) return null;
+  const u = toUrl(input);
+  if (!u || !HOSTS.has(u.hostname.toLowerCase())) return null;
+  const m = u.pathname.match(/^\/@([A-Za-z0-9._]{2,24})\/?$/);
+  return m ? m[1]! : null;
+}
+
+/**
+ * Cadre officiel « profil » de TikTok : en-tête du compte et dernières vidéos, mis à jour par TikTok.
+ * C'est le cadre que crée le script embed.js de TikTok ; on l'affiche directement, sans charger ce
+ * script dans nos pages (sa bibliothèque n'est pas servie partout : 404 constaté sur un de ses CDN).
+ */
+export function tiktokProfileEmbedUrl(handle: string): string {
+  if (!/^[A-Za-z0-9._]{2,24}$/.test(handle)) throw new Error('INVALID_TIKTOK_HANDLE');
+  return `https://www.tiktok.com/embed/@${handle}`;
+}
